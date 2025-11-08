@@ -20,25 +20,17 @@ function loadCalculator(file) {
       const container = document.getElementById('calculatorContainer');
       container.innerHTML = html;
 
-      // Execute embedded <script> tags
-      const scripts = container.getElementsByTagName('script');
-      for (let s of scripts) {
-        eval(s.innerHTML);
-      }
+      // Execute embedded <script> tags manually
+      const scripts = container.querySelectorAll('script');
+      scripts.forEach(oldScript => {
+        const newScript = document.createElement('script');
+        if (oldScript.src) {
+          newScript.src = oldScript.src;
+        } else {
+          newScript.textContent = oldScript.textContent;
+        }
+        document.body.appendChild(newScript);  // append to body to execute
+        oldScript.remove(); // optional: remove the original script tag
+      });
     });
 }
-
-// PWA install button
-const installBtn = document.getElementById('installBtn');
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = 'inline';
-});
-installBtn.addEventListener('click', () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => deferredPrompt = null);
-  }
-});
