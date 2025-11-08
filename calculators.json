@@ -1,1 +1,4 @@
-[{"id":"dc-cable","title":"DC Cable Size Calculator","desc":"Voltage-drop based conductor sizing","file":"dc-cable.html"},{"id":"energy-units","title":"Energy Consumption (kWh) Calculator","desc":"Daily, monthly, yearly units and cost","file":"energy-units.html"}]
+[
+  {"id":"dc-cable","title":"DC Cable Size Calculator","desc":"Voltage-drop based conductor sizing","file":"dc-cable.html"},
+  {"id":"energy-units","title":"Energy Consumption (kWh) Calculator","desc":"Daily, monthly, yearly units and cost","file":"energy-units.html"}
+]
