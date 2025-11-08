@@ -1,11 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Calculators by Adnan Rafiq</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Calculators by Adnan Rafiq</title>
+
+  <!-- Link to stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Link to PWA manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Service Worker registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker Registered'))
+        .catch(err => console.log('Service Worker Registration Failed:', err));
+    }
+  </script>
 </head>
+
 <body>
 <header>
   <h1>Smart Calculators</h1>
