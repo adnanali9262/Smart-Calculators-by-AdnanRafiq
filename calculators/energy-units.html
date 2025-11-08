@@ -1,0 +1,64 @@
+<!-- energy-units.html: fragment loaded into the shell -->
+<div>
+<h2 style="margin-top:0">Energy Consumption (kWh) Calculator</h2>
+<p style="margin-top:4px;color:var(--muted)">Compute daily, monthly and yearly energy units and cost from appliance power and usage time. Detailed breakdown included.</p>
+
+
+<div style="height:12px"></div>
+<div class="row">
+<div style="flex:1">
+<div class="field"><label>Appliance power (W)</label><input id="eu_power" type="number" value="1000" min="0"></div>
+<div class="field"><label>Hours used per day</label><input id="eu_hours" type="number" value="2" min="0" step="0.1"></div>
+<div class="field"><label>Days per month</label><input id="eu_days" type="number" value="30" min="0"></div>
+</div>
+<div style="flex:1">
+<div class="field"><label>Cost per unit (per kWh)</label><input id="eu_cost" type="number" value="30" min="0" step="0.01"></div>
+<div class="field"><label>Vat / taxes (%)</label><input id="eu_tax" type="number" value="0" min="0" step="0.1"></div>
+<div class="field"><label>Round values?</label><select id="eu_round"><option value="true">Yes</option><option value="false">No</option></select></div>
+</div>
+</div>
+
+
+<div style="display:flex;gap:10px;margin-top:6px">
+<button id="eu_calcBtn" class="btn">Calculate</button>
+<button id="eu_resetBtn" class="btn secondary">Reset</button>
+</div>
+
+
+<div id="eu_result" class="result" aria-live="polite" style="display:none"></div>
+</div>
+
+
+<script>
+window.calculatorInit = function(){
+const $ = id=>document.getElementById(id);
+const calcBtn = $('eu_calcBtn');
+const resetBtn = $('eu_resetBtn');
+const result = $('eu_result');
+
+
+function fmt(v,round){ return round ? Math.round(v*100)/100 : v; }
+
+
+calcBtn.addEventListener('click',()=>{
+const P_w = parseFloat($('eu_power').value)||0; // watts
+const h_day = parseFloat($('eu_hours').value)||0;
+const days_month = parseFloat($('eu_days').value)||0;
+const cost_per_kwh = parseFloat($('eu_cost').value)||0;
+const tax_pct = parseFloat($('eu_tax').value)||0;
+const doRound = $('eu_round').value === 'true';
+
+
+if(P_w<=0 || h_day<=0 || days_month<=0){ result.style.display='block'; result.innerText='Please enter positive values for power, hours/day and days/month.'; return; }
+
+
+// Calculations
+const kW = P_w / 1000; // kW
+const daily_kwh = kW * h_day;
+const monthly_kwh = daily_kwh * days_month;
+const yearly_kwh = daily_kwh * 365;
+
+
+const daily_cost = daily_kwh * cost_per_kwh;
+const monthly_cost = monthly_kwh * cost_per_kwh;
+const yearly_cost = yearly_kwh * cost_per_kwh;
