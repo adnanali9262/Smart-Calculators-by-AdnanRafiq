@@ -5,10 +5,10 @@ const installBtn = document.getElementById('installBtn');
 
 // Toggle menu visibility
 menuToggleBtn.addEventListener('click', () => {
-  menu.classList.toggle('collapsed');
+  menu.classList.toggle('menu-closed');
 });
 
-// Load calculators from JSON and create menu cards
+// Load calculators from JSON
 fetch('calculators.json')
   .then(res => res.json())
   .then(calculators => {
@@ -21,7 +21,7 @@ fetch('calculators.json')
     });
   });
 
-// Load calculator HTML dynamically and execute embedded scripts
+// Load calculator HTML and execute scripts
 function loadCalculator(file) {
   fetch('calculators/' + file)
     .then(res => res.text())
@@ -29,25 +29,21 @@ function loadCalculator(file) {
       const container = document.getElementById('calculatorContainer');
       container.innerHTML = html;
 
-      // Execute any embedded <script> tags
       const scripts = container.querySelectorAll('script');
       scripts.forEach(oldScript => {
         const newScript = document.createElement('script');
-        if (oldScript.src) {
-          newScript.src = oldScript.src;
-        } else {
-          newScript.textContent = oldScript.textContent;
-        }
+        if (oldScript.src) newScript.src = oldScript.src;
+        else newScript.textContent = oldScript.textContent;
         document.body.appendChild(newScript);
         oldScript.remove();
       });
 
-      // Close menu when a calculator is opened
-      menu.classList.add('collapsed');
+      // Close menu on calculator open
+      menu.classList.add('menu-closed');
     });
 }
 
-// PWA install button
+// PWA install
 let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
