@@ -1,26 +1,49 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Smart Calculators by Adnan Rafiq</title>
-  <link rel="stylesheet" href="style.css">
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+
+  <meta name="theme-color" content="#0b74de" />
+
+  <script>
+    // Register service worker early
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW register failed', e));
+    }
+  </script>
 </head>
 <body>
-  <nav class="navbar">
-    <h1>Smart Calculators by Adnan Rafiq</h1>
-  </nav>
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo">AR</div>
+      <div class="brand-text">
+        <div class="title">Smart Calculators</div>
+        <div class="subtitle">by Adnan Rafiq</div>
+      </div>
+    </div>
 
-  <main class="main-container">
-    <aside class="sidebar" id="sidebar">
-      <h2>Calculators</h2>
-      <button onclick="openCalculator('cable')">⚡ DC Cable Size</button>
-      <button onclick="openCalculator('energy')">🔋 Energy Consumption</button>
-    </aside>
+    <div class="header-actions">
+      <button id="menuToggleBtn" class="btn ghost" aria-label="Toggle menu">☰ Menu</button>
+      <button id="installBtn" class="btn ghost" aria-label="Install app" title="Install app">⚙ Install</button>
+    </div>
+  </header>
 
-    <section class="content" id="content">
-      <h2>Welcome</h2>
-      <p>Select a calculator from the left menu to begin.</p>
+  <main id="main" class="layout">
+    <nav id="calculatorList" class="nav" aria-label="Calculators menu">
+      <!-- menu populated dynamically -->
+    </nav>
+
+    <section id="calculatorContainer" class="content" aria-live="polite">
+      <div class="welcome-card">
+        <h2>Welcome</h2>
+        <p>Select a calculator from the left. Add new calculators by placing HTML files in <code class="code">/calculators/</code> and entries in <code class="code">calculators.json</code>.</p>
+        <p class="ack small">Credits: Engr. Adnan Rafiq</p>
+      </div>
     </section>
   </main>
 
