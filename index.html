@@ -1,49 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Smart Calculators by Adnan Rafiq</title>
-
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" href="style.css" />
-
-  <meta name="theme-color" content="#0b74de" />
-
-  <script>
-    // Register service worker as early as possible
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW register failed', e));
-    }
-  </script>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="app-header">
-    <div class="brand">
-      <div class="logo">AR</div>
-      <div class="brand-text">
-        <div class="title">Smart Calculators</div>
-        <div class="subtitle">by Adnan Rafiq</div>
-      </div>
-    </div>
+  <nav class="navbar">
+    <h1>Smart Calculators by Adnan Rafiq</h1>
+  </nav>
 
-    <div class="header-actions">
-      <button id="menuToggleBtn" class="btn ghost">☰ Menu</button>
-      <button id="installBtn" class="btn ghost" title="Install app">⚙ Install</button>
-    </div>
-  </header>
+  <main class="main-container">
+    <aside class="sidebar" id="sidebar">
+      <h2>Calculators</h2>
+      <button onclick="openCalculator('cable')">⚡ DC Cable Size</button>
+      <button onclick="openCalculator('energy')">🔋 Energy Consumption</button>
+    </aside>
 
-  <main id="main" class="layout">
-    <nav id="calculatorList" class="nav">
-      <!-- menu populated dynamically -->
-    </nav>
-
-    <section id="calculatorContainer" class="content">
-      <div class="welcome-card">
-        <h2>Welcome</h2>
-        <p>Select a calculator from the left. Add new calculators by placing HTML files in <code>/calculators/</code> and adding entries to <code>calculators.json</code> (or editing the list inside <code>script.js</code>).</p>
-        <p class="ack">Credits: Engr. Adnan Rafiq</p>
-      </div>
+    <section class="content" id="content">
+      <h2>Welcome</h2>
+      <p>Select a calculator from the left menu to begin.</p>
     </section>
   </main>
 
