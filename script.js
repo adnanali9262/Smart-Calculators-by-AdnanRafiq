@@ -1,130 +1,107 @@
-function openCalculator(type) {
-  const content = document.getElementById('content');
-  if (type === 'cable') {
-    content.innerHTML = `
-      <div class="calculator">
-        <h2>⚡ DC Cable Size Calculator</h2>
+/* Core loader + UI control for PWA app
+   - dynamically loads calculator HTML from /calculators/
+   - executes embedded scripts
+   - collapses menu and handles install prompt
+*/
 
-        <label>System Voltage (V)</label>
-        <input type="number" id="voltage" placeholder="e.g. 24">
+document.addEventListener('DOMContentLoaded', () => {
+  const menu = document.getElementById('calculatorList');
+  const menuToggleBtn = document.getElementById('menuToggleBtn');
+  const installBtn = document.getElementById('installBtn');
+  const container = document.getElementById('calculatorContainer');
 
-        <label>Current (A)</label>
-        <input type="number" id="current" placeholder="e.g. 20">
+  // Toggle menu open/close
+  menuToggleBtn.addEventListener('click', () => {
+    // toggle display state robustly
+    if (menu.classList.contains('menu-closed')) {
+      menu.classList.remove('menu-closed');
+    } else {
+      menu.classList.add('menu-closed');
+    }
+  });
 
-        <label>Cable Length One-Way (m)</label>
-        <input type="number" id="length" placeholder="e.g. 30">
-
-        <label>Max Voltage Drop (%)</label>
-        <input type="number" id="vdrop" placeholder="e.g. 3">
-
-        <button class="calculate-btn" onclick="calculateCable()">Calculate</button>
-
-        <div class="result" id="cableResult"></div>
-      </div>`;
-  }
-
-  if (type === 'energy') {
-    content.innerHTML = `
-      <div class="calculator">
-        <h2>🔋 Energy Consumption Calculator</h2>
-
-        <label>Input Mode</label>
-        <select id="mode" onchange="toggleInputMode()">
-          <option value="watts">Power in Watts</option>
-          <option value="amps">Current, Voltage & PF</option>
-        </select>
-
-        <div id="wattsInput">
-          <label>Power (Watts)</label>
-          <input type="number" id="powerWatts" placeholder="e.g. 220">
-        </div>
-
-        <div id="ampInput" style="display:none;">
-          <label>Current (Amps)</label>
-          <input type="number" id="currentAmp" placeholder="e.g. 1">
-
-          <label>Voltage (Volts)</label>
-          <input type="number" id="voltageAmp" placeholder="e.g. 220">
-
-          <label>Power Factor</label>
-          <input type="number" id="pf" value="0.9" min="0.1" max="1" step="0.01">
-        </div>
-
-        <label>Hours per Day</label>
-        <input type="number" id="hoursPerDay" value="24">
-
-        <label>Days</label>
-        <input type="number" id="days" value="30">
-
-        <button class="calculate-btn" onclick="calculateEnergy()">Calculate</button>
-        <div class="result" id="energyResult"></div>
-      </div>`;
-  }
-}
-
-function calculateCable() {
-  const V = parseFloat(document.getElementById('voltage').value);
-  const I = parseFloat(document.getElementById('current').value);
-  const L = parseFloat(document.getElementById('length').value);
-  const vdropPct = parseFloat(document.getElementById('vdrop').value);
-
-  if (isNaN(V) || isNaN(I) || isNaN(L) || isNaN(vdropPct)) {
-    document.getElementById('cableResult').innerHTML = '<span style="color:red;">Fill all fields correctly.</span>';
-    return;
-  }
-
-  const rho = 0.017; // copper resistivity
-  const Vdrop = V * (vdropPct / 100);
-  const A = (2 * rho * I * L) / Vdrop;
-  const A_rounded = Math.ceil(A * 10) / 10;
-
-  document.getElementById('cableResult').innerHTML = `
-  <strong>✅ Required Cable Size:</strong> ${A_rounded} mm² (Copper)
-  \n\nFormula: A = (2 × ρ × I × L) / Vdrop
-  \nρ = 0.017 Ω·mm²/m
-  \nA = (2 × 0.017 × ${I} × ${L}) / ${Vdrop.toFixed(2)} = ${A.toFixed(2)} mm²
-  \nRecommended Size: ${A_rounded} mm²`;
-}
-
-function toggleInputMode() {
-  const mode = document.getElementById('mode').value;
-  document.getElementById('wattsInput').style.display = mode === 'watts' ? 'block' : 'none';
-  document.getElementById('ampInput').style.display = mode === 'amps' ? 'block' : 'none';
-}
-
-function calculateEnergy() {
-  const mode = document.getElementById('mode').value;
-  const hours = parseFloat(document.getElementById('hoursPerDay').value);
-  const days = parseFloat(document.getElementById('days').value);
-  let powerW = 0;
-  let steps = "";
-
-  if (mode === 'watts') {
-    powerW = parseFloat(document.getElementById('powerWatts').value);
-    if (isNaN(powerW)) {
-      alert("Enter valid power.");
+  // Install prompt handling
+  let deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    installBtn.style.display = 'inline-block';
+  });
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) {
+      alert('Install not available. Use browser menu to Install or open via Chrome on Android.');
       return;
     }
-    steps += `1. Power = ${powerW} W`;
-  } else {
-    const current = parseFloat(document.getElementById('currentAmp').value);
-    const voltage = parseFloat(document.getElementById('voltageAmp').value);
-    const pf = parseFloat(document.getElementById('pf').value);
+    deferredPrompt.prompt();
+    const choice = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    installBtn.style.display = 'none';
+    console.log('User choice', choice);
+  });
 
-    if (isNaN(current) || isNaN(voltage) || isNaN(pf)) {
-      alert("Enter valid current, voltage and PF.");
-      return;
+  // Try to load calculators.json; fallback to built-in list
+  async function loadRegistry() {
+    try {
+      const r = await fetch('/calculators.json', {cache: 'no-store'});
+      if(!r.ok) throw new Error('no registry');
+      const list = await r.json();
+      renderMenu(list);
+      if (list.length) loadCalculator(list[0].file);
+    } catch (e) {
+      const fallback = [
+        { title: "DC Cable Size Calculator", desc: "Voltage-drop based conductor sizing (copper)", file: "dc-cable.html", icon: "⚡" },
+        { title: "Energy Consumption Calculator", desc: "Daily/monthly/yearly energy & cost", file: "energy-units.html", icon: "🔋" }
+      ];
+      renderMenu(fallback);
+      loadCalculator(fallback[0].file);
     }
-
-    powerW = current * voltage * pf;
-    steps += `1. Power = ${current} × ${voltage} × ${pf} = ${powerW.toFixed(2)} W`;
   }
 
-  const powerKW = powerW / 1000;
-  const totalEnergy = powerKW * hours * days;
+  function renderMenu(list) {
+    menu.innerHTML = '';
+    list.forEach(item => {
+      const el = document.createElement('div');
+      el.className = 'menu-item';
+      el.tabIndex = 0;
+      el.innerHTML = `<div class="icon">${item.icon||'🧮'}</div>
+                      <div class="meta"><div class="title">${item.title}</div><div class="desc small">${item.desc}</div></div>`;
+      el.onclick = () => loadCalculator(item.file);
+      el.onkeypress = (ev) => { if(ev.key==='Enter') loadCalculator(item.file); };
+      menu.appendChild(el);
+    });
+  }
 
-  steps += `\n2. Energy = ${powerKW.toFixed(3)} × ${hours} × ${days} = ${totalEnergy.toFixed(3)} kWh`;
+  async function loadCalculator(file) {
+    try {
+      container.innerHTML = `<div class="small">Loading…</div>`;
+      const r = await fetch('/calculators/' + file, {cache: 'no-store'});
+      if(!r.ok) throw new Error('load failed');
+      const html = await r.text();
+      container.innerHTML = html;
 
-  document.getElementById('energyResult').innerHTML = steps +
-    `\n\n<div class='highlight-box'>✅ Total Energy: ${totalEnergy.toFixed(3)} kWh</div>`;
-}
+      // Execute embedded scripts
+      const scripts = Array.from(container.querySelectorAll('script'));
+      for (const s of scripts) {
+        const ns = document.createElement('script');
+        if (s.src) {
+          ns.src = s.src;
+          ns.async = false;
+        } else {
+          ns.textContent = s.textContent;
+        }
+        document.body.appendChild(ns);
+        s.remove();
+      }
+
+      // close menu and reset scroll
+      menu.classList.add('menu-closed');
+      container.scrollTop = 0;
+    } catch (err) {
+      container.innerHTML = `<div class="result"><strong>Error loading calculator.</strong><div class="small">${err.message}</div></div>`;
+      console.error(err);
+    }
+  }
+
+  // Start
+  loadRegistry();
+});
