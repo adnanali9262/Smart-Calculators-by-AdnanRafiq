@@ -1,24 +1,50 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Smart Calculators by Adnan Rafiq</title>
-  <link rel="stylesheet" href="style.css">
-  <link rel="manifest" href="manifest.json">
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="style.css" />
+
+  <meta name="theme-color" content="#0b74de" />
+
+  <script>
+    // Register service worker as early as possible
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW register failed', e));
+    }
+  </script>
 </head>
 <body>
-  <header>
-    <h1>Smart Calculators</h1>
-    <div>
-      <button id="menuToggleBtn">☰ Main Menu</button>
-      <button id="installBtn">⚙ Install PWA</button>
+  <header class="app-header">
+    <div class="brand">
+      <div class="logo">AR</div>
+      <div class="brand-text">
+        <div class="title">Smart Calculators</div>
+        <div class="subtitle">by Adnan Rafiq</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="menuToggleBtn" class="btn ghost">☰ Menu</button>
+      <button id="installBtn" class="btn ghost" title="Install app">⚙ Install</button>
     </div>
   </header>
 
-  <main>
-    <nav id="calculatorList" class="menu-open"></nav>
-    <section id="calculatorContainer"></section>
+  <main id="main" class="layout">
+    <nav id="calculatorList" class="nav">
+      <!-- menu populated dynamically -->
+    </nav>
+
+    <section id="calculatorContainer" class="content">
+      <div class="welcome-card">
+        <h2>Welcome</h2>
+        <p>Select a calculator from the left. Add new calculators by placing HTML files in <code>/calculators/</code> and adding entries to <code>calculators.json</code> (or editing the list inside <code>script.js</code>).</p>
+        <p class="ack">Credits: Engr. Adnan Rafiq</p>
+      </div>
+    </section>
   </main>
 
   <script src="script.js"></script>
