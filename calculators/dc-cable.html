@@ -1,64 +1,127 @@
-<div class="calculator-container">
-  <h2>⚡ DC Cable Size Calculator</h2>
+<!-- DC Cable Calculator - professional layout -->
+<div class="calculator">
+  <h2>⚡ DC Cable Size</h2>
 
-  <label for="voltage">System Voltage (V)</label>
-  <input type="number" id="voltage" placeholder="e.g. 24">
+  <div class="form-grid" style="margin-top:8px">
+    <div>
+      <label for="dc_voltage">System Voltage (V)</label>
+      <input id="dc_voltage" class="input" type="number" step="any" placeholder="e.g. 24">
+    </div>
 
-  <label for="current">Current (A)</label>
-  <input type="number" id="current" placeholder="e.g. 20">
+    <div>
+      <label for="dc_current">Load Current (A)</label>
+      <input id="dc_current" class="input" type="number" step="any" placeholder="e.g. 20">
+    </div>
 
-  <label for="length">Cable Length One-Way (m)</label>
-  <input type="number" id="length" placeholder="e.g. 30">
+    <div>
+      <label for="dc_length">One-way Length (m)</label>
+      <input id="dc_length" class="input" type="number" step="any" placeholder="e.g. 30">
+    </div>
 
-  <label for="vdrop">Max Voltage Drop (%)</label>
-  <input type="number" id="vdrop" placeholder="e.g. 3">
+    <div>
+      <label for="dc_vdrop">Allowed Voltage Drop (%)</label>
+      <input id="dc_vdrop" class="input" type="number" step="any" placeholder="e.g. 3">
+    </div>
 
-  <button class="calc-btn" onclick="calculateDC()">🔍 Calculate</button>
+    <div class="form-row">
+      <label for="dc_material">Conductor</label>
+      <select id="dc_material" class="input">
+        <option value="copper" selected>Copper</option>
+        <option value="aluminum">Aluminum</option>
+      </select>
+    </div>
+  </div>
 
-  <div id="result"></div>
+  <div class="controls" style="margin-top:12px">
+    <button class="btn primary" id="dc_calc">Calculate</button>
+    <button class="btn ghost" id="dc_reset">Reset</button>
+  </div>
+
+  <div id="dc_result" class="result" style="display:none"></div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <script>
-function calculateDC() {
-  const V = parseFloat(document.getElementById('voltage').value);
-  const I = parseFloat(document.getElementById('current').value);
-  const L = parseFloat(document.getElementById('length').value);
-  const vdropPct = parseFloat(document.getElementById('vdrop').value);
+(function(){
+  const $ = id => document.getElementById(id);
+  const resultWrap = $('dc_result');
+  const stdSizes = [0.5,0.75,1,1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240];
 
-  if (isNaN(V) || isNaN(I) || isNaN(L) || isNaN(vdropPct)) {
-    document.getElementById('result').innerHTML = '<p style="color:red;"><strong>Please fill all fields correctly.</strong></p>';
-    return;
+  function compute(){
+    const V = parseFloat($('dc_voltage').value);
+    const I = parseFloat($('dc_current').value);
+    const L = parseFloat($('dc_length').value);
+    const pct = parseFloat($('dc_vdrop').value);
+    const mat = $('dc_material').value;
+    if (!V || !I || !L || !pct) {
+      resultWrap.style.display='block';
+      resultWrap.innerHTML = '<div class="small" style="color:#c00"><strong>Fill all fields with positive numbers.</strong></div>';
+      return;
+    }
+    const VdropAllowed = V * (pct/100);
+    const effLength = L * 2; // round-trip assumed for DC
+    const rho = mat === 'aluminum' ? 0.0282 : 0.01724; // Ω·mm²/m (approx)
+    // A (mm^2) = rho(mm²·Ω/m) * I * 2 * L / Vdrop ; rearranged from R = rho*L/A and Vdrop = I*R
+    const A = (rho * I * effLength) / VdropAllowed;
+    const A_rounded = Math.ceil(A*10)/10;
+
+    // Choose nearest standard size >= required
+    const recommended = stdSizes.find(s => s >= A_rounded) || stdSizes[stdSizes.length-1];
+
+    // Compute drop for recommended
+    const Rrec = (rho * effLength) / recommended;
+    const VdropRec = I * Rrec;
+    const dropPctRec = (VdropRec / V) * 100;
+
+    resultWrap.style.display='block';
+    resultWrap.innerHTML = `
+      <h4>Results</h4>
+      <div class="small">Required (theoretical): <span class="code">${A.toFixed(3)} mm²</span></div>
+      <div style="margin-top:8px"><strong>Recommended standard size:</strong> <span style="color:green;font-size:18px">${recommended} mm²</span></div>
+
+      <div style="margin-top:12px">
+        <strong>Estimated voltage drop with ${recommended} mm²:</strong>
+        <div class="small">Drop = ${VdropRec.toFixed(3)} V (${dropPctRec.toFixed(3)}%)</div>
+      </div>
+
+      <details style="margin-top:12px">
+        <summary>Calculation breakdown</summary>
+        <pre class="small" style="white-space:pre-wrap;margin-top:8px">
+Inputs:
+  V = ${V} V
+  I = ${I} A
+  One-way length = ${L} m (round-trip used = ${effLength} m)
+  Allowed drop = ${pct}% => ${VdropAllowed.toFixed(4)} V
+Material rho = ${rho} Ω·mm²/m
+
+Formulas:
+  R_allowed = VdropAllowed / I
+  A_required = rho * effLength / R_allowed
+  A_required = ${A.toFixed(6)} mm²
+Recommended = ${recommended} mm²
+
+Resistance of recommended A:
+  R_rec = rho * effLength / A_rec = ${Rrec.toExponential(6)} Ω
+Voltage drop with recommended:
+  V_drop_rec = I * R_rec = ${VdropRec.toFixed(6)} V
+        </pre>
+      </details>
+    `;
   }
 
-  const rho = 0.017; // Copper resistivity
-  const Vdrop = V * (vdropPct / 100);
-  const A = (2 * rho * I * L) / Vdrop;
-  const A_rounded = Math.ceil(A * 10) / 10;
+  function reset(){
+    $('dc_voltage').value='24';
+    $('dc_current').value='10';
+    $('dc_length').value='30';
+    $('dc_vdrop').value='3';
+    $('dc_material').value='copper';
+    resultWrap.style.display='none';
+    resultWrap.innerHTML='';
+  }
 
-  document.getElementById('result').innerHTML = `
-    <h3>✅ Results:</h3>
-    <p><strong>Required Cable Size:</strong> <span style="color:green;font-size:18px;">${A_rounded} mm²</span> (Copper)</p>
+  $('dc_calc').addEventListener('click', compute);
+  $('dc_reset').addEventListener('click', reset);
 
-    <h3>📊 Step-by-Step Calculations:</h3>
-    <p><strong>1. Inputs:</strong></p>
-    <ul>
-      <li>System Voltage (V): ${V} V</li>
-      <li>Current (I): ${I} A</li>
-      <li>One-Way Length (L): ${L} m</li>
-      <li>Voltage Drop Limit: ${vdropPct}% = ${Vdrop.toFixed(2)} V</li>
-    </ul>
-
-    <p><strong>2. Formula Used:</strong></p>
-    <code>A = (2 × ρ × I × L) / V<sub>drop</sub></code><br/>
-    <small>ρ = 0.017 Ω·mm²/m (copper resistivity)</small>
-
-    <p><strong>3. Substitution:</strong></p>
-    <code>A = (2 × 0.017 × ${I} × ${L}) / ${Vdrop.toFixed(2)}</code>
-
-    <p><strong>4. Final Calculation:</strong></p>
-    <code>A = ${A.toFixed(2)} mm²</code> → rounded up to <strong>${A_rounded} mm²</strong>
-  `;
-}
+  // set defaults
+  reset();
+})();
 </script>
