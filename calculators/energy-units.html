@@ -1,75 +1,174 @@
-<div class="calculator-container">
-  <h2>⚡ Energy Consumption Calculator (kWh)</h2>
+<!-- Energy Consumption Calculator - professional layout -->
+<div class="calculator">
+  <h2>🔋 Energy Consumption (kWh)</h2>
 
-  <label for="mode">Select Input Mode:</label>
-  <select id="mode" onchange="toggleMode()">
-    <option value="watts">Power in Watts</option>
-    <option value="amps">Current, Voltage & PF</option>
-  </select>
+  <div class="form-grid" style="margin-top:8px">
+    <div>
+      <label for="eu_mode">Input Mode</label>
+      <select id="eu_mode" class="input">
+        <option value="watts">Power (Watts)</option>
+        <option value="amps">Current, Voltage & PF</option>
+      </select>
+    </div>
 
-  <div id="wattsInput">
-    <label for="powerWatts">Power (Watts)</label>
-    <input type="number" id="powerWatts" placeholder="e.g. 220">
+    <div class="form-row">
+      <div id="eu_watts_block">
+        <label for="eu_power_w">Power (W)</label>
+        <input id="eu_power_w" class="input" type="number" step="any" placeholder="e.g. 1000">
+      </div>
+
+      <div id="eu_amps_block" style="display:none">
+        <label for="eu_current">Current (A)</label>
+        <input id="eu_current" class="input" type="number" step="any" placeholder="e.g. 5">
+
+        <label for="eu_voltage">Voltage (V)</label>
+        <input id="eu_voltage" class="input" type="number" step="any" placeholder="e.g. 230">
+
+        <label for="eu_pf">Power Factor</label>
+        <input id="eu_pf" class="input" type="number" step="any" value="0.9" min="0.1" max="1">
+      </div>
+    </div>
+
+    <div>
+      <label for="eu_hours">Hours per day</label>
+      <input id="eu_hours" class="input" type="number" step="any" value="24">
+    </div>
+
+    <div>
+      <label for="eu_days">Days (period)</label>
+      <input id="eu_days" class="input" type="number" step="any" value="30">
+    </div>
+
+    <div>
+      <label for="eu_cost">Cost per kWh (currency)</label>
+      <input id="eu_cost" class="input" type="number" step="any" value="30">
+    </div>
+
+    <div>
+      <label for="eu_tax">Tax / Surcharge (%)</label>
+      <input id="eu_tax" class="input" type="number" step="any" value="0">
+    </div>
   </div>
 
-  <div id="ampInput" style="display:none;">
-    <label for="current">Current (Amps)</label>
-    <input type="number" id="current" placeholder="e.g. 1">
-    <label for="voltage">Voltage (Volts)</label>
-    <input type="number" id="voltage" placeholder="e.g. 220">
-    <label for="pf">Power Factor (default 0.9)</label>
-    <input type="number" id="pf" value="0.9" min="0.1" max="1" step="0.01">
+  <div class="controls" style="margin-top:12px">
+    <button class="btn primary" id="eu_calc">Calculate</button>
+    <button class="btn ghost" id="eu_reset">Reset</button>
   </div>
 
-  <label for="hoursPerDay">Hours per Day</label>
-  <input type="number" id="hoursPerDay" value="24">
-
-  <label for="days">Number of Days</label>
-  <input type="number" id="days" value="30">
-
-  <button class="calc-btn" onclick="calculateEnergy()">Calculate Energy</button>
-
-  <div id="result"></div>
+  <div id="eu_result" class="result" style="display:none"></div>
 </div>
 
 <script>
-function toggleMode() {
-  const mode = document.getElementById('mode').value;
-  document.getElementById('wattsInput').style.display = mode === 'watts' ? 'block' : 'none';
-  document.getElementById('ampInput').style.display = mode === 'amps' ? 'block' : 'none';
-}
+(function(){
+  const $ = id => document.getElementById(id);
+  const mode = $('eu_mode');
+  const wattsBlock = $('eu_watts_block');
+  const ampsBlock = $('eu_amps_block');
+  const resWrap = $('eu_result');
 
-function calculateEnergy() {
-  const mode = document.getElementById('mode').value;
-  const hoursPerDay = parseFloat(document.getElementById('hoursPerDay').value);
-  const days = parseFloat(document.getElementById('days').value);
+  mode.addEventListener('change', () => {
+    if (mode.value === 'watts') {
+      wattsBlock.style.display = 'block';
+      ampsBlock.style.display = 'none';
+    } else {
+      wattsBlock.style.display = 'none';
+      ampsBlock.style.display = 'block';
+    }
+  });
 
-  let powerW = 0;
-  let steps = "";
+  function compute(){
+    let powerW;
+    if (mode.value === 'watts') {
+      powerW = parseFloat($('eu_power_w').value);
+      if (!powerW) return showError('Enter power in watts.');
+    } else {
+      const I = parseFloat($('eu_current').value);
+      const V = parseFloat($('eu_voltage').value);
+      const pf = parseFloat($('eu_pf').value);
+      if (!I || !V || !pf) return showError('Enter current, voltage and power factor.');
+      powerW = I * V * pf;
+    }
 
-  if (mode === 'watts') {
-    powerW = parseFloat(document.getElementById('powerWatts').value);
-    if (isNaN(powerW)) { alert("Please enter power in watts."); return; }
-    steps += `1. Power (W) = ${powerW.toFixed(2)} W`;
-  } else {
-    const current = parseFloat(document.getElementById('current').value);
-    const voltage = parseFloat(document.getElementById('voltage').value);
-    const pf = parseFloat(document.getElementById('pf').value);
-    if (isNaN(current) || isNaN(voltage) || isNaN(pf)) { alert("Enter valid values."); return; }
-    powerW = current * voltage * pf;
-    steps += `1. Power (W) = Current × Voltage × PF = ${current} × ${voltage} × ${pf} = ${powerW.toFixed(2)} W`;
+    const hours = parseFloat($('eu_hours').value) || 0;
+    const days = parseFloat($('eu_days').value) || 0;
+    const cost = parseFloat($('eu_cost').value) || 0;
+    const taxPct = parseFloat($('eu_tax').value) || 0;
+
+    const powerKW = powerW / 1000;
+    const dailyKwh = powerKW * hours;
+    const monthlyKwh = dailyKwh * days;
+    const yearlyKwh = dailyKwh * 365;
+
+    const dailyCost = dailyKwh * cost;
+    const monthlyCost = monthlyKwh * cost;
+    const yearlyCost = yearlyKwh * cost;
+
+    const taxDaily = dailyCost * (taxPct/100);
+    const taxMonthly = monthlyCost * (taxPct/100);
+    const taxYearly = yearlyCost * (taxPct/100);
+
+    const totalDaily = dailyCost + taxDaily;
+    const totalMonthly = monthlyCost + taxMonthly;
+    const totalYearly = yearlyCost + taxYearly;
+
+    resWrap.style.display='block';
+    resWrap.innerHTML = `
+      <h4>Results</h4>
+      <div class="small">Power: ${powerW.toFixed(3)} W (${powerKW.toFixed(4)} kW)</div>
+
+      <div style="margin-top:10px">
+        <strong>Daily:</strong> ${dailyKwh.toFixed(3)} kWh &nbsp; | &nbsp; Cost: ${totalDaily.toFixed(2)} (incl. tax ${taxDaily.toFixed(2)})
+      </div>
+
+      <div style="margin-top:6px">
+        <strong>Period (${days} days):</strong> ${monthlyKwh.toFixed(3)} kWh &nbsp; | &nbsp; Cost: ${totalMonthly.toFixed(2)} (incl. tax ${taxMonthly.toFixed(2)})
+      </div>
+
+      <div style="margin-top:6px">
+        <strong>Yearly:</strong> ${yearlyKwh.toFixed(3)} kWh &nbsp; | &nbsp; Cost: ${totalYearly.toFixed(2)} (incl. tax ${taxYearly.toFixed(2)})
+      </div>
+
+      <details style="margin-top:12px"><summary>Show calculation steps</summary>
+        <pre class="small" style="white-space:pre-wrap;margin-top:8px">
+Inputs:
+  Power (W) = ${powerW.toFixed(3)}
+  Hours/day = ${hours}
+  Days = ${days}
+  Cost/kWh = ${cost}
+  Tax% = ${taxPct}
+
+Daily energy = (Power W / 1000) × Hours = ${powerKW.toFixed(4)} × ${hours} = ${dailyKwh.toFixed(3)} kWh
+Period energy = ${dailyKwh.toFixed(3)} × ${days} = ${monthlyKwh.toFixed(3)} kWh
+Yearly energy = ${dailyKwh.toFixed(3)} × 365 = ${yearlyKwh.toFixed(3)} kWh
+        </pre>
+      </details>
+    `;
   }
 
-  const powerKW = powerW / 1000;
-  const dailyEnergy = powerKW * hoursPerDay;
-  const totalEnergy = dailyEnergy * days;
+  function showError(msg){
+    resWrap.style.display='block';
+    resWrap.innerHTML = `<div style="color:#c00"><strong>${msg}</strong></div>`;
+  }
 
-  steps += `
-2. Power (kW) = ${powerW.toFixed(2)} ÷ 1000 = ${powerKW.toFixed(3)} kW
-3. Daily Energy = ${powerKW.toFixed(3)} × ${hoursPerDay} hrs = ${dailyEnergy.toFixed(3)} kWh/day
-4. Total Energy for ${days} days = ${dailyEnergy.toFixed(3)} × ${days} = ${totalEnergy.toFixed(3)} kWh`;
+  function reset(){
+    $('eu_mode').value='watts';
+    $('eu_power_w').value='1000';
+    $('eu_current').value='';
+    $('eu_voltage').value='';
+    $('eu_pf').value='0.9';
+    $('eu_hours').value='24';
+    $('eu_days').value='30';
+    $('eu_cost').value='30';
+    $('eu_tax').value='0';
+    wattsBlock.style.display='block';
+    ampsBlock.style.display='none';
+    resWrap.style.display='none';
+    resWrap.innerHTML='';
+  }
 
-  document.getElementById('result').innerHTML = steps + 
-    `<div class="highlight-box">✅ Total Energy Consumed: ${totalEnergy.toFixed(3)} kWh</div>`;
-}
+  $('eu_calc').addEventListener('click', compute);
+  $('eu_reset').addEventListener('click', reset);
+
+  reset();
+})();
 </script>
