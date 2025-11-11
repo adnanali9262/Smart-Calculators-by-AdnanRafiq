@@ -1,68 +1,102 @@
+/* Core loader + UI control for PWA app
+   - dynamically loads calculator HTML from /calculators/
+   - executes embedded scripts
+   - collapses menu and handles install prompt
+*/
+
 const menu = document.getElementById('calculatorList');
 const menuToggleBtn = document.getElementById('menuToggleBtn');
 const installBtn = document.getElementById('installBtn');
+const container = document.getElementById('calculatorContainer');
 
-// Toggle menu visibility
+// Toggle menu open/close
 menuToggleBtn.addEventListener('click', () => {
   menu.classList.toggle('menu-closed');
 });
 
-// List of calculators
-const calculators = [
-  {
-    title: "⚡ DC Cable Size Calculator",
-    desc: "Calculate copper cable cross-section for DC systems",
-    file: "dc-cable.html"
-  },
-  {
-    title: "⚡ Energy Consumption Calculator",
-    desc: "Calculate daily/monthly/yearly energy in kWh",
-    file: "energy-units.html"
-  }
-];
-
-// Create menu cards
-calculators.forEach(calc => {
-  const card = document.createElement('div');
-  card.className = 'calculator-card';
-  card.innerHTML = `<h3>${calc.title}</h3><p>${calc.desc}</p>`;
-  card.onclick = () => loadCalculator(calc.file);
-  menu.appendChild(card);
-});
-
-// Load calculator dynamically
-function loadCalculator(file) {
-  fetch('calculators/' + file)
-    .then(res => res.text())
-    .then(html => {
-      const container = document.getElementById('calculatorContainer');
-      container.innerHTML = html;
-
-      // Execute scripts inside loaded calculator
-      const scripts = container.querySelectorAll('script');
-      scripts.forEach(oldScript => {
-        const newScript = document.createElement('script');
-        if (oldScript.src) newScript.src = oldScript.src;
-        else newScript.textContent = oldScript.textContent;
-        document.body.appendChild(newScript);
-        oldScript.remove();
-      });
-
-      // Close menu
-      menu.classList.add('menu-closed');
-    });
-}
-
-// PWA install
-let deferredPrompt;
+// Install prompt handling
+let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  installBtn.style.display = 'inline';
+  installBtn.style.display = 'inline-block';
 });
-installBtn.addEventListener('click', () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(() => deferredPrompt = null);
+installBtn.addEventListener('click', async () => {
+  if (!deferredPrompt) {
+    alert('Install not available. Use browser menu to Install or open via HTTPS on supported browsers.');
+    return;
   }
+  deferredPrompt.prompt();
+  const choice = await deferredPrompt.userChoice;
+  deferredPrompt = null;
+  installBtn.style.display = 'none';
+  console.log('User choice', choice);
 });
+
+// Load calculators registry (calculators.json)
+async function loadRegistry() {
+  try {
+    const r = await fetch('/calculators.json', {cache: 'no-store'});
+    if (!r.ok) throw new Error('Registry load failed');
+    const list = await r.json();
+    renderMenu(list);
+    if (list.length) loadCalculator(list[0].file);
+  } catch (e) {
+    // fallback: minimal built-in list if calculators.json missing
+    console.warn(e);
+    const fallback = [
+      { title: "DC Cable Size Calculator", desc: "Voltage-drop based conductor sizing", file: "dc-cable.html", icon: "⚡" },
+      { title: "Energy Consumption Calculator", desc: "Daily/monthly/yearly energy & cost", file: "energy-units.html", icon: "🔋" }
+    ];
+    renderMenu(fallback);
+  }
+}
+
+// Render left menu
+function renderMenu(list) {
+  menu.innerHTML = '';
+  list.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'menu-item';
+    el.innerHTML = `<div class="icon">${item.icon||'🧮'}</div>
+                    <div class="meta"><div class="title">${item.title}</div><div class="desc small">${item.desc}</div></div>`;
+    el.onclick = () => loadCalculator(item.file);
+    menu.appendChild(el);
+  });
+}
+
+// Load calculator file and run scripts
+async function loadCalculator(file) {
+  try {
+    container.innerHTML = `<div class="small">Loading…</div>`;
+    const r = await fetch('/calculators/' + file, {cache: 'no-store'});
+    if (!r.ok) throw new Error('Load failed');
+    const html = await r.text();
+    container.innerHTML = html;
+
+    // Run embedded scripts: copy content to new <script> nodes appended to body
+    const scripts = Array.from(container.querySelectorAll('script'));
+    for (const s of scripts) {
+      const ns = document.createElement('script');
+      if (s.src) {
+        ns.src = s.src;
+        // preserve async behavior
+        ns.async = false;
+      } else {
+        ns.textContent = s.textContent;
+      }
+      document.body.appendChild(ns);
+      s.remove();
+    }
+
+    // close menu and give focus to content
+    menu.classList.add('menu-closed');
+    container.scrollTop = 0;
+  } catch (err) {
+    container.innerHTML = `<div class="result"><strong>Error loading calculator.</strong><div class="small">${err.message}</div></div>`;
+    console.error(err);
+  }
+}
+
+// start
+loadRegistry();
