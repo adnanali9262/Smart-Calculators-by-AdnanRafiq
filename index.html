@@ -5,15 +5,18 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Smart Calculators by Adnan Rafiq</title>
 
-  <link rel="manifest" href="manifest.json" />
+  <!-- Manifest -->
+  <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="style.css" />
 
   <meta name="theme-color" content="#0b74de" />
 
   <script>
-    // Register service worker early
+    // Register service worker with relative path
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(e => console.warn('SW register failed', e));
+      navigator.serviceWorker.register('./sw.js')
+        .then(() => console.log('Service Worker registered'))
+        .catch(e => console.warn('SW register failed', e));
     }
   </script>
 </head>
@@ -29,6 +32,7 @@
 
     <div class="header-actions">
       <button id="menuToggleBtn" class="btn ghost" aria-label="Toggle menu">☰ Menu</button>
+      <!-- Button is now always visible -->
       <button id="installBtn" class="btn ghost" aria-label="Install app" title="Install app">⚙ Install</button>
     </div>
   </header>
@@ -48,5 +52,31 @@
   </main>
 
   <script src="script.js"></script>
+
+  <!-- PWA Install Prompt Script -->
+  <script>
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+    });
+
+    const installBtn = document.getElementById('installBtn');
+    if (installBtn) {
+      installBtn.style.display = 'inline'; // always visible
+
+      installBtn.addEventListener('click', () => {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then(() => {
+            deferredPrompt = null;
+          });
+        } else {
+          alert('App cannot be installed at this time.');
+        }
+      });
+    }
+  </script>
 </body>
 </html>
