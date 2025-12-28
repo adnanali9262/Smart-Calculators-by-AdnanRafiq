@@ -1,8 +1,4 @@
-/* Core loader + UI control for PWA app
-   - dynamically loads calculator HTML from /calculators/
-   - executes embedded scripts
-   - collapses menu and handles install prompt
-*/
+/* Core loader + UI control for PWA app */
 
 document.addEventListener('DOMContentLoaded', () => {
   const menu = document.getElementById('calculatorList');
@@ -12,12 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Toggle menu open/close
   menuToggleBtn.addEventListener('click', () => {
-    // toggle display state robustly
-    if (menu.classList.contains('menu-closed')) {
-      menu.classList.remove('menu-closed');
-    } else {
-      menu.classList.add('menu-closed');
-    }
+    menu.classList.toggle('menu-closed');
   });
 
   // Install prompt handling
@@ -29,31 +20,30 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   installBtn.addEventListener('click', async () => {
     if (!deferredPrompt) {
-      alert('Install not available. Use browser menu to Install or open via Chrome on Android.');
+      alert('Install not available.');
       return;
     }
     deferredPrompt.prompt();
-    const choice = await deferredPrompt.userChoice;
+    await deferredPrompt.userChoice;
     deferredPrompt = null;
     installBtn.style.display = 'none';
-    console.log('User choice', choice);
   });
 
-  // Try to load calculators.json; fallback to built-in list
+  // Load calculators.json; no auto‑open
   async function loadRegistry() {
     try {
       const r = await fetch('calculators.json', {cache: 'no-store'});
-      if(!r.ok) throw new Error('no registry');
+      if (!r.ok) throw new Error('no registry');
       const list = await r.json();
       renderMenu(list);
-      if (list.length) loadCalculator(list[0].file);
+      // **NO AUTO LOAD HERE**
     } catch (e) {
       const fallback = [
-        { title: "DC Cable Size Calculator", desc: "Voltage-drop based conductor sizing (copper)", file: "dc-cable.html", icon: "⚡" },
-        { title: "Energy Consumption Calculator", desc: "Daily/monthly/yearly energy & cost", file: "energy-units.html", icon: "🔋" }
+        { title: "DC Cable Size Calculator", desc: "Voltage-drop based sizing", file: "dc-cable.html", icon: "⚡" },
+        { title: "Energy Consumption Calculator", desc: "Daily/monthly/yearly energy", file: "energy-units.html", icon: "🔋" }
       ];
       renderMenu(fallback);
-      loadCalculator(fallback[0].file);
+      // **NO AUTO LOAD HERE**
     }
   }
 
@@ -63,10 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const el = document.createElement('div');
       el.className = 'menu-item';
       el.tabIndex = 0;
-      el.innerHTML = `<div class="icon">${item.icon||'🧮'}</div>
-                      <div class="meta"><div class="title">${item.title}</div><div class="desc small">${item.desc}</div></div>`;
+      el.innerHTML = `
+        <div class="icon">${item.icon||''}</div>
+        <div class="meta">
+          <div class="title">${item.title}</div>
+          <div class="desc small">${item.desc}</div>
+        </div>
+      `;
       el.onclick = () => loadCalculator(item.file);
-      el.onkeypress = (ev) => { if(ev.key==='Enter') loadCalculator(item.file); };
       menu.appendChild(el);
     });
   }
@@ -75,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       container.innerHTML = `<div class="small">Loading…</div>`;
       const r = await fetch('calculators/' + file, {cache: 'no-store'});
-      if(!r.ok) throw new Error('load failed');
+      if (!r.ok) throw new Error('load failed');
       const html = await r.text();
       container.innerHTML = html;
 
@@ -83,17 +77,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const scripts = Array.from(container.querySelectorAll('script'));
       for (const s of scripts) {
         const ns = document.createElement('script');
-        if (s.src) {
-          ns.src = s.src;
-          ns.async = false;
-        } else {
-          ns.textContent = s.textContent;
-        }
+        if (s.src) ns.src = s.src;
+        else ns.textContent = s.textContent;
         document.body.appendChild(ns);
         s.remove();
       }
-
-      // close menu and reset scroll
+      // Close menu
       menu.classList.add('menu-closed');
       container.scrollTop = 0;
     } catch (err) {
@@ -102,6 +91,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Start
+  // start registry (no auto calculator load)
   loadRegistry();
 });
