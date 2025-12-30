@@ -1,0 +1,69 @@
+<div class="calculator">
+  <h2>Current Calculator</h2>
+
+  <div class="input-group">
+    <label for="type">Select Type:</label>
+    <select id="type" name="type">
+      <option value="transformer">Transformer</option>
+      <option value="generator">Generator</option>
+    </select>
+  </div>
+
+  <div class="input-group">
+    <label for="phase">Select Phase:</label>
+    <select id="phase" name="phase" onchange="changeVoltageLabel()">
+      <option value="single">Single Phase</option>
+      <option value="three">Three Phase</option>
+    </select>
+  </div>
+
+  <div class="input-group">
+    <label id="voltageLabel" for="voltage">Enter Voltage (Phase-to-Phase):</label>
+    <input type="number" id="voltage" name="voltage">
+  </div>
+
+  <div class="input-group">
+    <label for="kva">Enter KVA:</label>
+    <input type="number" id="kva" name="kva">
+  </div>
+
+  <div class="input-group">
+    <button onclick="calculate()">Calculate</button>
+  </div>
+
+  <div class="output-group">
+    <p id="result"></p>
+  </div>
+
+  <script>
+    function calculate() {
+      const type = document.getElementById("type").value;
+      const phase = document.getElementById("phase").value;
+      const kva = parseFloat(document.getElementById("kva").value);
+      const voltage = parseFloat(document.getElementById("voltage").value);
+
+      if (isNaN(kva) || isNaN(voltage)) {
+        document.getElementById("result").textContent = "Please enter valid numbers for KVA and Voltage.";
+        return;
+      }
+
+      const current = phase === "single" 
+        ? kva * 1000 / voltage 
+        : kva * 1000 / (Math.sqrt(3) * voltage);
+      const currentWithEfficiency = current * 0.7;
+
+      const formula = `Current (A) = ${kva} KVA × 1000 / (${phase === "single" ? "Voltage (Phase-to-Neutral)" : "Voltage (Phase-to-Phase)"}: ${voltage} V) = ${current.toFixed(2)} A`;
+      const note = `Note: Current reduced to 70% for efficiency: ${currentWithEfficiency.toFixed(2)} A`;
+
+      document.getElementById("result").innerHTML = `${formula}<br>${note}`;
+    }
+
+    function changeVoltageLabel() {
+      const phase = document.getElementById("phase").value;
+      const voltageLabel = document.getElementById("voltageLabel");
+      voltageLabel.textContent = phase === "single"
+        ? "Enter Voltage (Phase-to-Neutral):"
+        : "Enter Voltage (Phase-to-Phase):";
+    }
+  </script>
+</div>

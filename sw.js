@@ -1,4 +1,5 @@
-const CACHE = 'smart-calculators-v1';
+const CACHE = 'smart-calculators-v2';
+
 
 const ASSETS = [
   './',
@@ -8,7 +9,9 @@ const ASSETS = [
   './manifest.json',
   './calculators.json',
   './calculators/dc-cable.html',
-  './calculators/energy-units.html'
+  './calculators/energy-units.html',
+  './calculators/current-calculator.html'
+
 ];
 
 self.addEventListener('install', event => {

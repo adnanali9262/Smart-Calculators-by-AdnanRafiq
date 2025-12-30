@@ -11,4 +11,11 @@
     "file": "energy-units.html",
     "icon": "🔋"
   }
+  {
+  "id": "current-calculator",
+  "title": "Current Calculator",
+  "category": "Electrical",
+  "file": "calculators/current-calculator.html"
+}
+
 ]
