@@ -10,12 +10,11 @@
     "desc": "Daily / monthly / yearly energy (kWh)",
     "file": "energy-units.html",
     "icon": "🔋"
-  }
+  },
   {
-  "id": "current-calculator",
-  "title": "Current Calculator",
-  "category": "Electrical",
-  "file": "calculators/current-calculator.html"
-}
-
+    "title": "Current Calculator",
+    "desc": "Calculate current for transformer or generator (single/three phase)",
+    "file": "current-calculator.html",
+    "icon": "📈"
+  }
 ]
