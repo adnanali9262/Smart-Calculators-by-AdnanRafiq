@@ -1,69 +1,115 @@
 <div class="calculator">
-  <h2>Current Calculator</h2>
+  <h2>📈 Current Calculator</h2>
 
-  <div class="input-group">
-    <label for="type">Select Type:</label>
-    <select id="type" name="type">
-      <option value="transformer">Transformer</option>
-      <option value="generator">Generator</option>
-    </select>
+  <div class="form-grid" style="margin-top:8px">
+    <div>
+      <label for="cc_type">Type</label>
+      <select id="cc_type" class="input">
+        <option value="transformer">Transformer</option>
+        <option value="generator">Generator</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="cc_phase">Phase</label>
+      <select id="cc_phase" class="input">
+        <option value="single">Single Phase</option>
+        <option value="three">Three Phase</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="cc_voltage" id="cc_voltageLabel">Voltage (V)</label>
+      <input id="cc_voltage" class="input" type="number" step="any" placeholder="230">
+    </div>
+
+    <div>
+      <label for="cc_kva">KVA</label>
+      <input id="cc_kva" class="input" type="number" step="any" placeholder="10">
+    </div>
   </div>
 
-  <div class="input-group">
-    <label for="phase">Select Phase:</label>
-    <select id="phase" name="phase" onchange="changeVoltageLabel()">
-      <option value="single">Single Phase</option>
-      <option value="three">Three Phase</option>
-    </select>
+  <div class="controls" style="margin-top:12px">
+    <button class="btn primary" id="cc_calc">Calculate</button>
+    <button class="btn ghost" id="cc_reset">Reset</button>
   </div>
 
-  <div class="input-group">
-    <label id="voltageLabel" for="voltage">Enter Voltage (Phase-to-Phase):</label>
-    <input type="number" id="voltage" name="voltage">
-  </div>
-
-  <div class="input-group">
-    <label for="kva">Enter KVA:</label>
-    <input type="number" id="kva" name="kva">
-  </div>
-
-  <div class="input-group">
-    <button onclick="calculate()">Calculate</button>
-  </div>
-
-  <div class="output-group">
-    <p id="result"></p>
-  </div>
-
-  <script>
-    function calculate() {
-      const type = document.getElementById("type").value;
-      const phase = document.getElementById("phase").value;
-      const kva = parseFloat(document.getElementById("kva").value);
-      const voltage = parseFloat(document.getElementById("voltage").value);
-
-      if (isNaN(kva) || isNaN(voltage)) {
-        document.getElementById("result").textContent = "Please enter valid numbers for KVA and Voltage.";
-        return;
-      }
-
-      const current = phase === "single" 
-        ? kva * 1000 / voltage 
-        : kva * 1000 / (Math.sqrt(3) * voltage);
-      const currentWithEfficiency = current * 0.7;
-
-      const formula = `Current (A) = ${kva} KVA × 1000 / (${phase === "single" ? "Voltage (Phase-to-Neutral)" : "Voltage (Phase-to-Phase)"}: ${voltage} V) = ${current.toFixed(2)} A`;
-      const note = `Note: Current reduced to 70% for efficiency: ${currentWithEfficiency.toFixed(2)} A`;
-
-      document.getElementById("result").innerHTML = `${formula}<br>${note}`;
-    }
-
-    function changeVoltageLabel() {
-      const phase = document.getElementById("phase").value;
-      const voltageLabel = document.getElementById("voltageLabel");
-      voltageLabel.textContent = phase === "single"
-        ? "Enter Voltage (Phase-to-Neutral):"
-        : "Enter Voltage (Phase-to-Phase):";
-    }
-  </script>
+  <div id="cc_result" class="result" style="display:none"></div>
 </div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const resultWrap = $('cc_result');
+
+  function compute(){
+    const type = $('cc_type').value;
+    const phase = $('cc_phase').value;
+    const kva = parseFloat($('cc_kva').value);
+    const voltage = parseFloat($('cc_voltage').value);
+
+    if (!kva || !voltage) {
+      resultWrap.style.display='block';
+      resultWrap.innerHTML = '<div class="small" style="color:#c00"><strong>Fill all fields with positive numbers.</strong></div>';
+      return;
+    }
+
+    const current = phase === "single" 
+      ? kva * 1000 / voltage 
+      : kva * 1000 / (Math.sqrt(3) * voltage);
+    const current70 = current * 0.7;
+
+    resultWrap.style.display='block';
+    resultWrap.innerHTML = `
+      <h4>Results</h4>
+      <div class="small">Calculated Current: <span class="code">${current.toFixed(2)} A</span></div>
+      <div style="margin-top:8px"><strong>With 70% efficiency:</strong> <span style="color:green;font-size:18px">${current70.toFixed(2)} A</span></div>
+
+      <details style="margin-top:12px">
+        <summary>Calculation breakdown</summary>
+        <pre class="small" style="white-space:pre-wrap;margin-top:8px">
+Inputs:
+  Type = ${type}
+  Phase = ${phase}
+  Voltage = ${voltage} V
+  KVA = ${kva}
+
+Formulas:
+  Current (A) = KVA × 1000 / Voltage
+  Current (Single Phase) = ${phase === "single" ? `${kva} * 1000 / ${voltage}` : `${kva} * 1000 / (√3 * ${voltage})`}
+  Current = ${current.toFixed(6)} A
+  Current with 70% efficiency = ${current70.toFixed(6)} A
+        </pre>
+      </details>
+    `;
+  }
+
+  function reset(){
+    $('cc_type').value='transformer';
+    $('cc_phase').value='single';
+    $('cc_voltage').value='230';
+    $('cc_kva').value='10';
+    resultWrap.style.display='none';
+    resultWrap.innerHTML='';
+    updateVoltageLabel();
+  }
+
+  function updateVoltageLabel(){
+    $('cc_voltageLabel').textContent = $('cc_phase').value === 'single' 
+      ? 'Voltage (Phase-to-Neutral)'
+      : 'Voltage (Phase-to-Phase)';
+  }
+
+  document.addEventListener('click', function onDoc(e){
+    if ($('cc_calc')) {
+      $('cc_calc').addEventListener('click', compute);
+      $('cc_reset').addEventListener('click', reset);
+      $('cc_phase').addEventListener('change', updateVoltageLabel);
+      document.removeEventListener('click', onDoc);
+    }
+  });
+
+  // fallback: set defaults
+  setTimeout(()=>{ if($('cc_type')) reset(); }, 50);
+})();
+</script>
