@@ -1,6 +1,6 @@
 // ===== Smart Calculators Service Worker =====
 
-const CACHE_VERSION = 'v3'; // increment whenever you add/update calculators
+const CACHE_VERSION = 'v4'; // increment whenever you add/update calculators
 const CACHE_NAME = `smart-calculators-${CACHE_VERSION}`;
 
 const ASSETS = [

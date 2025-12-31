@@ -16,5 +16,14 @@
     "desc": "Calculate current for transformer or generator (single/three phase)",
     "file": "current-calculator.html",
     "icon": "📈"
+  },
+  {
+    "title": "KWH Production-Solar System",
+    "desc": "Calculate KWH production for any solay system based on any specific area",
+    "file": "solar-production.html",
+    "icon": "☀️"
   }
+
+
+
 ]

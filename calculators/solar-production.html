@@ -1,0 +1,121 @@
+<div class="calculator" id="solar">
+  <h2>☀️ Solar Energy Production</h2>
+
+  <div class="form-grid" style="margin-top:8px">
+    <div>
+      <label for="solar_city">City / Area</label>
+      <select id="solar_city" class="input">
+        <option value="24.8607">Karachi</option>
+        <option value="31.5497" selected>Lahore</option>
+        <option value="33.6844">Islamabad</option>
+        <option value="32.1877">Faisalabad</option>
+        <option value="30.1575">Multan</option>
+        <option value="31.4504">Gujranwala</option>
+        <option value="33.5651">Rawalpindi</option>
+        <option value="34.0151">Peshawar</option>
+        <option value="27.7052">Hyderabad</option>
+        <option value="30.1798">Bahawalpur</option>
+        <option value="29.3956">Sukkur</option>
+        <option value="25.3960">Quetta</option>
+        <option value="32.0836">Sialkot</option>
+        <option value="30.8081">Sargodha</option>
+        <option value="28.4212">Larkana</option>
+        <option value="34.2061">Abbottabad</option>
+        <option value="33.6007">Gujrat</option>
+        <option value="32.5711">Jhelum</option>
+        <option value="30.3753">Dera Ghazi Khan</option>
+        <option value="29.9038">Rahim Yar Khan</option>
+      </select>
+    </div>
+
+    <div>
+      <label for="solar_kw">Solar System Size (kW)</label>
+      <input id="solar_kw" class="input" type="number" step="any" placeholder="5">
+    </div>
+
+    <div>
+      <label for="solar_eff">System Efficiency (%)</label>
+      <input id="solar_eff" class="input" type="number" step="any" value="80">
+    </div>
+  </div>
+
+  <div class="controls" style="margin-top:12px">
+    <button class="btn primary" id="solar_calc">Calculate</button>
+    <button class="btn ghost" id="solar_reset">Reset</button>
+  </div>
+
+  <div id="solar_result" class="result" style="display:none"></div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const result = $('solar_result');
+
+  const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const seasonFactor = [0.85,0.88,0.92,0.95,1.00,1.05,1.05,1.00,0.95,0.90,0.88,0.85];
+
+  function calculate(){
+    const lat = Math.abs(parseFloat($('solar_city').value));
+    const kw  = parseFloat($('solar_kw').value);
+    const eff = parseFloat($('solar_eff').value) / 100;
+
+    if (!lat || !kw || !eff) {
+      result.style.display = 'block';
+      result.innerHTML = '<div class="small" style="color:#c00"><strong>Please fill all fields correctly.</strong></div>';
+      return;
+    }
+
+    let basePSH = 6.5 - (lat * 0.03);
+    basePSH = Math.max(3.5, Math.min(6.5, basePSH));
+
+    let dailyByMonth = seasonFactor.map(f =>
+      +(kw * basePSH * f * eff).toFixed(2)
+    );
+
+    let yearly = dailyByMonth.reduce((t,v)=> t + (v * 30), 0);
+
+    result.style.display = 'block';
+    result.innerHTML = `
+      <h4>Results</h4>
+      <div class="small"><strong>Estimated Peak Sun Hours:</strong> ${basePSH.toFixed(2)} hrs/day</div>
+
+      <div style="margin-top:10px">
+        <strong>Average Daily Production (kWh/day):</strong><br>
+        ${months.map((m,i)=>`${m}: ${dailyByMonth[i]} kWh`).join('<br>')}
+      </div>
+
+      <div style="margin-top:12px">
+        <strong>Estimated Yearly Production:</strong>
+        <span style="color:green;font-size:18px">${yearly.toFixed(0)} kWh</span>
+      </div>
+
+      <details style="margin-top:12px">
+        <summary>Calculation breakdown</summary>
+        <pre class="small" style="white-space:pre-wrap;margin-top:8px">
+PSH = 6.5 − (Latitude × 0.03)
+Daily kWh = kW × PSH × Efficiency
+Monthly = seasonal adjustment
+Yearly = sum(monthly × 30)
+        </pre>
+      </details>
+    `;
+  }
+
+  function reset(){
+    $('solar_city').value = '31.5497';
+    $('solar_kw').value = '';
+    $('solar_eff').value = '80';
+    result.style.display = 'none';
+    result.innerHTML = '';
+  }
+
+  document.addEventListener('click', function init(){
+    if ($('solar_calc')) {
+      $('solar_calc').addEventListener('click', calculate);
+      $('solar_reset').addEventListener('click', reset);
+      document.removeEventListener('click', init);
+    }
+  });
+})();
+</script>
