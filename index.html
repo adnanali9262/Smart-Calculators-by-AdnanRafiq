@@ -33,7 +33,7 @@
     <div class="header-actions">
       <button id="menuToggleBtn" class="btn ghost" aria-label="Toggle menu">☰ Menu</button>
       <!-- Button is now always visible -->
-      <button id="installBtn" class="btn ghost" aria-label="Install app" title="Install app">⚙ Install</button>
+      <button id="installBtn" class="btn ghost" aria-label="Install app" title="Install app" hidden>⚙ Install</button>
     </div>
   </header>
 
@@ -53,30 +53,49 @@
 
   <script src="script.js"></script>
 
-  <!-- PWA Install Prompt Script -->
-  <script>
-    let deferredPrompt;
+<script>
+const installBtn = document.getElementById("installBtn");
+let deferredPrompt = null;
 
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-    });
+/* ---------- INSTALL STATE CHECK ---------- */
+function isInstalled() {
+  return (
+    window.matchMedia("(display-mode: standalone)").matches || // Android / Chrome
+    window.navigator.standalone === true                        // iOS Safari
+  );
+}
 
-    const installBtn = document.getElementById('installBtn');
-    if (installBtn) {
-      installBtn.style.display = 'inline'; // always visible
+/* ---------- INITIAL LOAD ---------- */
+if (!isInstalled()) {
+  installBtn.hidden = false;
+}
 
-      installBtn.addEventListener('click', () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          deferredPrompt.userChoice.then(() => {
-            deferredPrompt = null;
-          });
-        } else {
-          alert('App cannot be installed at this time.');
-        }
-      });
-    }
-  </script>
+/* ---------- ANDROID INSTALL PROMPT ---------- */
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  if (!isInstalled()) {
+    installBtn.hidden = false;
+  }
+});
+
+/* ---------- INSTALL BUTTON CLICK ---------- */
+installBtn.addEventListener("click", async () => {
+  if (!deferredPrompt) return;
+
+  deferredPrompt.prompt();
+  await deferredPrompt.userChoice;
+
+  deferredPrompt = null;
+  installBtn.hidden = true;
+});
+
+/* ---------- AFTER INSTALL ---------- */
+window.addEventListener("appinstalled", () => {
+  installBtn.hidden = true;
+});
+</script>
+
 </body>
 </html>
