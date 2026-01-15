@@ -22,6 +22,12 @@
     "desc": "Calculate KWH production for any solay system",
     "file": "solar-production.html",
     "icon": "☀️"
+  },
+    {
+    "title": "Three Phase KW KVA KVAR calculator",
+    "desc": "Calculate Active, Apparent and Reactive Power from Volts, Current, PF",
+    "file": "th-ph-power.html",
+    "icon": "⚡"
   }
 
 

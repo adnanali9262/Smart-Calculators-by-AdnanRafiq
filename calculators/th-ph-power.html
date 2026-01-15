@@ -1,0 +1,206 @@
+<div class="calculator">
+  <h2>⚡ Three-Phase Power & Conversion Calculator</h2>
+
+  <!-- LOAD TYPE -->
+  <div class="form-grid" style="margin-top:8px">
+    <div>
+      <label for="tp_loadType">Load Type</label>
+      <select id="tp_loadType" class="input">
+        <option value="balanced">Balanced</option>
+        <option value="unbalanced">Unbalanced</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- BALANCED INPUTS -->
+  <div id="tp_balanced" class="form-grid" style="margin-top:10px">
+    <div>
+      <label>Voltage (L-L)</label>
+      <input id="tp_voltage" class="input" type="number" step="any" placeholder="400">
+    </div>
+    <div>
+      <label>Current (Line)</label>
+      <input id="tp_current" class="input" type="number" step="any" placeholder="10">
+    </div>
+    <div>
+      <label>Power Factor</label>
+      <input id="tp_pf" class="input" type="number" step="0.01" placeholder="0.8">
+    </div>
+  </div>
+
+  <!-- UNBALANCED INPUTS -->
+  <div id="tp_unbalanced" style="display:none;margin-top:10px">
+
+    <h4>Phase 1</h4>
+    <div class="form-grid">
+      <input id="tp_v1" class="input" type="number" placeholder="Voltage">
+      <input id="tp_i1" class="input" type="number" placeholder="Current">
+      <input id="tp_pf1" class="input" type="number" step="0.01" placeholder="PF">
+    </div>
+
+    <h4>Phase 2</h4>
+    <div class="form-grid">
+      <input id="tp_v2" class="input" type="number" placeholder="Voltage">
+      <input id="tp_i2" class="input" type="number" placeholder="Current">
+      <input id="tp_pf2" class="input" type="number" step="0.01" placeholder="PF">
+    </div>
+
+    <h4>Phase 3</h4>
+    <div class="form-grid">
+      <input id="tp_v3" class="input" type="number" placeholder="Voltage">
+      <input id="tp_i3" class="input" type="number" placeholder="Current">
+      <input id="tp_pf3" class="input" type="number" step="0.01" placeholder="PF">
+    </div>
+
+  </div>
+
+  <div class="controls" style="margin-top:12px">
+    <button class="btn primary" id="tp_calc">Calculate Power</button>
+    <button class="btn ghost" id="tp_reset">Reset</button>
+  </div>
+
+  <div id="tp_result" class="result" style="display:none"></div>
+
+  <hr style="margin:16px 0">
+
+  <!-- CONVERSION -->
+  <h3>Voltage / Current Conversion</h3>
+
+  <div class="form-grid">
+    <div>
+      <label>Convert</label>
+      <select id="tp_convType" class="input">
+        <option value="voltage">Voltage (L-L → L-N)</option>
+        <option value="current">Current (Line → Phase)</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Input Value</label>
+      <input id="tp_convVal" class="input" type="number" step="any" placeholder="Enter value">
+    </div>
+  </div>
+
+  <div class="controls" style="margin-top:10px">
+    <button class="btn primary" id="tp_convert">Convert</button>
+  </div>
+
+  <div id="tp_convResult" class="result" style="display:none"></div>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+
+  function toggleLoad(){
+    const balanced = $('tp_loadType').value === 'balanced';
+    $('tp_balanced').style.display = balanced ? 'grid' : 'none';
+    $('tp_unbalanced').style.display = balanced ? 'none' : 'block';
+  }
+
+  function calcPower(){
+    let kW, kVA, kVAR, breakdown = '';
+
+    if ($('tp_loadType').value === 'balanced') {
+      const V = parseFloat($('tp_voltage').value);
+      const I = parseFloat($('tp_current').value);
+      const pf = parseFloat($('tp_pf').value);
+
+      if(!V || !I || !pf){
+        showErr('tp_result','Fill all balanced load fields.');
+        return;
+      }
+
+      kVA = Math.sqrt(3)*V*I/1000;
+      kW = kVA*pf;
+      kVAR = Math.sqrt(kVA*kVA - kW*kW);
+
+      breakdown = `Balanced:
+kVA = √3 × V × I / 1000
+kW = kVA × PF
+kVAR = √(kVA² − kW²)`;
+
+    } else {
+      const v=[1,2,3].map(n=>parseFloat($('tp_v'+n).value));
+      const i=[1,2,3].map(n=>parseFloat($('tp_i'+n).value));
+      const pf=[1,2,3].map(n=>parseFloat($('tp_pf'+n).value));
+
+      if(v.some(x=>!x)||i.some(x=>!x)||pf.some(x=>!x)){
+        showErr('tp_result','Fill all phase values.');
+        return;
+      }
+
+      const p = v.map((V,idx)=>V*i[idx]*pf[idx]/1000);
+      kW = p.reduce((a,b)=>a+b,0);
+      kVA = (v[0]*i[0]+v[1]*i[1]+v[2]*i[2])/1000;
+      kVAR = Math.sqrt(kVA*kVA - kW*kW);
+
+      breakdown = `Unbalanced:
+P = Σ(V × I × PF) / 1000
+kVA = Σ(V × I) / 1000
+kVAR = √(kVA² − kW²)`;
+    }
+
+    const r = $('tp_result');
+    r.style.display='block';
+    r.innerHTML = `
+      <h4>Results</h4>
+      <div class="small">Active Power: <span class="code">${kW.toFixed(2)} kW</span></div>
+      <div class="small">Apparent Power: <span class="code">${kVA.toFixed(2)} kVA</span></div>
+      <div style="margin-top:6px"><strong>Reactive Power:</strong>
+        <span style="color:green;font-size:18px">${kVAR.toFixed(2)} kVAR</span>
+      </div>
+
+      <details style="margin-top:10px">
+        <summary>Calculation breakdown</summary>
+        <pre class="small" style="white-space:pre-wrap;margin-top:6px">${breakdown}</pre>
+      </details>
+    `;
+  }
+
+  function convert(){
+    const val = parseFloat($('tp_convVal').value);
+    if(!val){
+      showErr('tp_convResult','Enter a value to convert.');
+      return;
+    }
+
+    let out = '';
+    if($('tp_convType').value==='voltage'){
+      out = `Line-Neutral Voltage = ${(val/Math.sqrt(3)).toFixed(2)} V`;
+    }else{
+      out = `Phase Current = ${(val/Math.sqrt(3)).toFixed(2)} A`;
+    }
+
+    const r=$('tp_convResult');
+    r.style.display='block';
+    r.innerHTML = `<strong>${out}</strong>`;
+  }
+
+  function reset(){
+    document.querySelectorAll('#tp_balanced input,#tp_unbalanced input,#tp_convVal')
+      .forEach(i=>i.value='');
+    $('tp_result').style.display='none';
+    $('tp_convResult').style.display='none';
+    $('tp_loadType').value='balanced';
+    toggleLoad();
+  }
+
+  function showErr(id,msg){
+    const r=$(id);
+    r.style.display='block';
+    r.innerHTML=`<div class="small" style="color:#c00"><strong>${msg}</strong></div>`;
+  }
+
+  document.addEventListener('click',function init(){
+    if($('tp_calc')){
+      $('tp_calc').addEventListener('click',calcPower);
+      $('tp_reset').addEventListener('click',reset);
+      $('tp_convert').addEventListener('click',convert);
+      $('tp_loadType').addEventListener('change',toggleLoad);
+      document.removeEventListener('click',init);
+    }
+  });
+
+})();
+</script>
