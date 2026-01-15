@@ -12,8 +12,8 @@
     "icon": "🔋"
   },
   {
-    "title": "Current Calculator",
-    "desc": "Permissible Load (A) on each leg transformer/generator (single/three phase)",
+    "title": "Max Permissible Load Calculator",
+    "desc": "Max Permissible Load (A) on each leg transformer/generator (single/three phase)",
     "file": "current-calculator.html",
     "icon": "📈"
   },
@@ -28,6 +28,12 @@
     "desc": "Calculate Active, Apparent and Reactive Power from Volts, Current, PF",
     "file": "th-ph-power.html",
     "icon": "⚡"
+  },
+    {
+    "title": "Telecom Rectifier system Calculator",
+    "desc": "Calculate any Input or Output paramter of a Rectifier Supply system in Telecom or Generic",
+    "file": "telecom_rectifier.html",
+    "icon": "🔌"
   }
 
 
