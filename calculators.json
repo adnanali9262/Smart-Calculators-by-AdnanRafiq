@@ -1,25 +1,25 @@
 [
   {
     "title": "DC Cable Size Calculator",
-    "desc": "Voltage-drop based conductor sizing (copper)",
+    "desc": "Calculate cable size/diameter for any load",
     "file": "dc-cable.html",
     "icon": "⚡"
   },
   {
-    "title": "Energy Consumption Calculator",
-    "desc": "Daily / monthly / yearly energy (kWh)",
+    "title": "Energy/Units (KWH) Consumption Calculator",
+    "desc": "Daily / monthly / yearly energy (kWh) of any load",
     "file": "energy-units.html",
     "icon": "🔋"
   },
   {
     "title": "Current Calculator",
-    "desc": "Calculate current for transformer or generator (single/three phase)",
+    "desc": "Permissible Load (A) on each leg transformer/generator (single/three phase)",
     "file": "current-calculator.html",
     "icon": "📈"
   },
   {
     "title": "KWH Production-Solar System",
-    "desc": "Calculate KWH production for any solay system based on any specific area",
+    "desc": "Calculate KWH production for any solay system",
     "file": "solar-production.html",
     "icon": "☀️"
   }
