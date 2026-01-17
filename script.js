@@ -94,3 +94,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // start registry (no auto calculator load)
   loadRegistry();
 });
+
+const aboutBtn = document.getElementById("aboutBtn");
+const aboutSection = document.getElementById("aboutContactSection");
+const backHomeBtn = document.getElementById("backHomeBtn");
+
+const calculatorContainer = document.getElementById("calculatorContainer");
+
+aboutBtn.addEventListener("click", () => {
+  calculatorContainer.classList.add("hidden");
+  aboutSection.classList.remove("hidden");
+});
+
+backHomeBtn.addEventListener("click", () => {
+  aboutSection.classList.add("hidden");
+  calculatorContainer.classList.remove("hidden");
+});
+

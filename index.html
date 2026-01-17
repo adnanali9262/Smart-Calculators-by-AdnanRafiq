@@ -20,6 +20,7 @@
     }
   </script>
 </head>
+
 <body>
   <header class="app-header">
     <div class="brand">
@@ -32,8 +33,16 @@
 
     <div class="header-actions">
       <button id="menuToggleBtn" class="btn ghost" aria-label="Toggle menu">☰ Menu</button>
-      <!-- Button is now always visible -->
-      <button id="installBtn" class="btn ghost" aria-label="Install app" title="Install app" hidden>⚙ Install</button>
+
+      <!-- About & Contact Button -->
+      <button id="aboutBtn" class="btn ghost" aria-label="About and Contact">
+        About/Contact
+      </button>
+
+      <!-- Install Button -->
+      <button id="installBtn" class="btn ghost" aria-label="Install app" title="Install app" hidden>
+        ⚙ Install
+      </button>
     </div>
   </header>
 
@@ -42,6 +51,7 @@
       <!-- menu populated dynamically -->
     </nav>
 
+    <!-- MAIN CALCULATOR AREA -->
     <section id="calculatorContainer" class="content" aria-live="polite">
       <div class="welcome-card">
         <h2>Welcome</h2>
@@ -49,53 +59,82 @@
         <p class="ack small">Credits: Engr. Adnan Rafiq</p>
       </div>
     </section>
+
+    <!-- ABOUT & CONTACT SECTION -->
+    <section id="aboutContactSection" class="content hidden" aria-live="polite">
+      <div class="welcome-card">
+        <h2>About Smart Calculators</h2>
+
+        <p>
+          Smart Calculators is a collection of practical electrical and engineering
+          calculators designed for telecomm workers, Solar technicians, and engineers.
+        </p>
+
+        <p>
+          The application works offline and is built as a Progressive Web App (PWA)
+          for fast access during field and lab work.
+        </p>
+
+        <h3>Contact</h3>
+
+        <p><strong>Developer:</strong>Engr. Adnan Rafiq</p>
+        <p><strong>Email:</strong> adnan.rafiq173@gmail.com</p>
+        <p>
+          <strong>GitHub:</strong>
+          <a href="https://github.com/adnanali9262" target="_blank" rel="noopener">
+            github.com/adnanali9262
+          </a>
+        </p>
+
+        <button id="backHomeBtn" class="btn">
+          ← Back to Calculators
+        </button>
+      </div>
+    </section>
+
   </main>
 
   <script src="script.js"></script>
 
-<script>
-const installBtn = document.getElementById("installBtn");
-let deferredPrompt = null;
+  <!-- INSTALL LOGIC -->
+  <script>
+    const installBtn = document.getElementById("installBtn");
+    let deferredPrompt = null;
 
-/* ---------- INSTALL STATE CHECK ---------- */
-function isInstalled() {
-  return (
-    window.matchMedia("(display-mode: standalone)").matches || // Android / Chrome
-    window.navigator.standalone === true                        // iOS Safari
-  );
-}
+    function isInstalled() {
+      return (
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.navigator.standalone === true
+      );
+    }
 
-/* ---------- INITIAL LOAD ---------- */
-if (!isInstalled()) {
-  installBtn.hidden = false;
-}
+    if (!isInstalled()) {
+      installBtn.hidden = false;
+    }
 
-/* ---------- ANDROID INSTALL PROMPT ---------- */
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
 
-  if (!isInstalled()) {
-    installBtn.hidden = false;
-  }
-});
+      if (!isInstalled()) {
+        installBtn.hidden = false;
+      }
+    });
 
-/* ---------- INSTALL BUTTON CLICK ---------- */
-installBtn.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
+    installBtn.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
 
-  deferredPrompt.prompt();
-  await deferredPrompt.userChoice;
+      deferredPrompt.prompt();
+      await deferredPrompt.userChoice;
 
-  deferredPrompt = null;
-  installBtn.hidden = true;
-});
+      deferredPrompt = null;
+      installBtn.hidden = true;
+    });
 
-/* ---------- AFTER INSTALL ---------- */
-window.addEventListener("appinstalled", () => {
-  installBtn.hidden = true;
-});
-</script>
+    window.addEventListener("appinstalled", () => {
+      installBtn.hidden = true;
+    });
+  </script>
 
 </body>
 </html>

@@ -69,3 +69,22 @@ label{display:block;font-weight:600;margin-bottom:6px}
   .layout{flex-direction:column;padding:0 14px}
   .nav.menu-closed{display:none}
 }
+.page-section {
+  padding: 20px;
+  max-width: 800px;
+  margin: auto;
+}
+
+.hidden {
+  display: none;
+}
+
+#aboutContactSection h2,
+#aboutContactSection h3 {
+  margin-top: 15px;
+}
+
+#aboutContactSection p {
+  line-height: 1.6;
+  margin: 8px 0;
+}
