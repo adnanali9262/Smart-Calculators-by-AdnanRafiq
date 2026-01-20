@@ -12,10 +12,11 @@ if (window.location.href.startsWith(ghPagesURL)) {
 
   const container = document.getElementById('calculatorContainer');
 
-  // Toggle menu open/close
-  menuToggleBtn.addEventListener('click', () => {
-    menu.classList.toggle('menu-closed');
-  });
+// Open menu on click — no toggle
+menuToggleBtn.addEventListener('click', () => {
+  menu.classList.remove('menu-closed'); // always opens
+});
+
 
   // --------------------------
   // PWA Install Button Handling
@@ -151,4 +152,10 @@ aboutBtn.addEventListener("click", () => {
 backHomeBtn.addEventListener("click", () => {
   aboutSection.classList.add("hidden");
   calculatorContainer.classList.remove("hidden");
+});
+// Close menu or About section when mobile hardware back button is pressed
+window.addEventListener('popstate', () => {
+  menu.classList.add('menu-closed');           // closes menu
+  aboutSection.classList.add('hidden');        // hide About section if open
+  calculatorContainer.classList.remove('hidden'); // show main content
 });
