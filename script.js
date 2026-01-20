@@ -11,28 +11,48 @@ document.addEventListener('DOMContentLoaded', () => {
     menu.classList.toggle('menu-closed');
   });
 
-  // Install prompt handling
+  // --------------------------
+  // PWA Install Button Handling
+  // --------------------------
   let deferredPrompt = null;
+
+  // Detect installable app
   window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Prevent automatic prompt
     deferredPrompt = e;
-    installBtn.style.display = 'inline-block';
+    installBtn.style.display = 'inline-block'; // Show button
   });
+
+  // Handle Install button click
   installBtn.addEventListener('click', async () => {
     if (!deferredPrompt) {
       alert('Install not available.');
       return;
     }
     deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install: ${outcome}`);
     deferredPrompt = null;
     installBtn.style.display = 'none';
   });
 
-  // Load calculators.json; no auto‑open
+  // Hide button if app is already installed
+  window.addEventListener('appinstalled', () => {
+    installBtn.style.display = 'none';
+    console.log('PWA installed successfully');
+  });
+
+  // Hide button if app is already running as standalone
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    installBtn.style.display = 'none';
+  }
+
+  // --------------------------
+  // Load calculators.json registry
+  // --------------------------
   async function loadRegistry() {
     try {
-      const r = await fetch('calculators.json', {cache: 'no-store'});
+      const r = await fetch('calculators.json', { cache: 'no-store' });
       if (!r.ok) throw new Error('no registry');
       const list = await r.json();
       renderMenu(list);
@@ -68,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadCalculator(file) {
     try {
       container.innerHTML = `<div class="small">Loading…</div>`;
-      const r = await fetch('calculators/' + file, {cache: 'no-store'});
+      const r = await fetch('calculators/' + file, { cache: 'no-store' });
       if (!r.ok) throw new Error('load failed');
       const html = await r.text();
       container.innerHTML = html;
@@ -82,6 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.appendChild(ns);
         s.remove();
       }
+
       // Close menu
       menu.classList.add('menu-closed');
       container.scrollTop = 0;
@@ -91,10 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // start registry (no auto calculator load)
+  // Start registry (no auto calculator load)
   loadRegistry();
 });
 
+// --------------------------
+// About / Contact section toggle
+// --------------------------
 const aboutBtn = document.getElementById("aboutBtn");
 const aboutSection = document.getElementById("aboutContactSection");
 const backHomeBtn = document.getElementById("backHomeBtn");
@@ -110,4 +134,3 @@ backHomeBtn.addEventListener("click", () => {
   aboutSection.classList.add("hidden");
   calculatorContainer.classList.remove("hidden");
 });
-
