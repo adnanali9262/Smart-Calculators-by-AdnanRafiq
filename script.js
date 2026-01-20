@@ -16,39 +16,44 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------
   let deferredPrompt = null;
 
-  // Detect if app is already installed (Android & iOS)
+  // Helper to detect if app is installed or running standalone
   const isAppInstalled = () => {
     return (
       window.matchMedia('(display-mode: standalone)').matches || // Android
-      window.navigator.standalone === true                        // iOS
+      window.navigator.standalone === true                      // iOS
     );
   };
 
-  // Only show Install button if app is NOT installed
-  if (!isAppInstalled()) {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault(); // Prevent automatic prompt
-      deferredPrompt = e;
-      installBtn.style.display = 'inline-block'; // Show button
-    });
-  } else {
+  // Initial check: hide button if app is already installed
+  if (isAppInstalled()) {
     installBtn.style.display = 'none';
   }
 
-  // Handle Install button click
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) {
-      alert('Install not available.');
-      return;
+  // Listen for beforeinstallprompt (app can be installed)
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+
+    // Only show button if app is NOT installed
+    if (!isAppInstalled()) {
+      installBtn.style.display = 'inline-block';
     }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install: ${outcome}`);
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
   });
 
-  // Hide button after app is installed
+  // Handle Install button click
+  installBtn.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+
+    deferredPrompt.prompt(); // Show browser install prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log('User choice:', outcome);
+
+    // Hide the button immediately
+    installBtn.style.display = 'none';
+    deferredPrompt = null;
+  });
+
+  // Hide button permanently after app is installed
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
     console.log('PWA installed successfully');
