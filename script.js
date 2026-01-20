@@ -16,12 +16,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // --------------------------
   let deferredPrompt = null;
 
-  // Detect installable app
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault(); // Prevent automatic prompt
-    deferredPrompt = e;
-    installBtn.style.display = 'inline-block'; // Show button
-  });
+  // Detect if app is already installed (Android & iOS)
+  const isAppInstalled = () => {
+    return (
+      window.matchMedia('(display-mode: standalone)').matches || // Android
+      window.navigator.standalone === true                        // iOS
+    );
+  };
+
+  // Only show Install button if app is NOT installed
+  if (!isAppInstalled()) {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault(); // Prevent automatic prompt
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-block'; // Show button
+    });
+  } else {
+    installBtn.style.display = 'none';
+  }
 
   // Handle Install button click
   installBtn.addEventListener('click', async () => {
@@ -36,16 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
     installBtn.style.display = 'none';
   });
 
-  // Hide button if app is already installed
+  // Hide button after app is installed
   window.addEventListener('appinstalled', () => {
     installBtn.style.display = 'none';
     console.log('PWA installed successfully');
   });
-
-  // Hide button if app is already running as standalone
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-    installBtn.style.display = 'none';
-  }
 
   // --------------------------
   // Load calculators.json registry
