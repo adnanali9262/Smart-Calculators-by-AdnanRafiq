@@ -4,6 +4,12 @@ document.addEventListener('DOMContentLoaded', () => {
   const menu = document.getElementById('calculatorList');
   const menuToggleBtn = document.getElementById('menuToggleBtn');
   const installBtn = document.getElementById('installBtn');
+  // Hide install button on GitHub Pages URL (optional fix)
+const ghPagesURL = "https://adnanali9262.github.io/Smart-Calculators-by-AdnanRafiq/";
+if (window.location.href.startsWith(ghPagesURL)) {
+  installBtn.style.display = 'none';
+}
+
   const container = document.getElementById('calculatorContainer');
 
   // Toggle menu open/close
