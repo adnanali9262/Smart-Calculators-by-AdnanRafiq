@@ -1,7 +1,7 @@
 /* Core loader + UI control for PWA app */
 
 document.addEventListener('DOMContentLoaded', () => {
-  const menu = document.getElementById('calculatorList');
+  const menu = document.getElementById('menuItems');
   const menuToggleBtn = document.getElementById('menuToggleBtn');
   const installBtn = document.getElementById('installBtn');
   // Hide install button on GitHub Pages URL (optional fix)
