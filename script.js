@@ -1,11 +1,11 @@
-/* Core loader + UI control for PWA app */
+/* Core loader + UI control for PWA app with proper navigation */
 
 document.addEventListener('DOMContentLoaded', () => {
 
   /* ---------------- DOM REFERENCES ---------------- */
 
-  const menuPanel = document.getElementById('calculatorList'); // whole nav
-  const menuItems = document.getElementById('menuItems');      // items container
+  const menuPanel = document.getElementById('calculatorList'); // nav
+  const menuItems = document.getElementById('menuItems');
 
   const menuToggleBtn = document.getElementById('menuToggleBtn');
   const aboutBtn = document.getElementById('aboutBtn');
@@ -16,25 +16,55 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const installBtn = document.getElementById('installBtn');
 
-  /* ---------------- MENU BEHAVIOR ---------------- */
+  /* ---------------- VIEW CONTROL ---------------- */
 
-  // Menu button: ONLY toggle menu
+  function showMenu(push = true) {
+    menuPanel.classList.remove('menu-closed');
+    calculatorContainer.classList.add('hidden');
+    aboutSection.classList.add('hidden');
+    if (push) history.pushState({ view: 'menu' }, '');
+  }
+
+  function showCalculator(push = true) {
+    menuPanel.classList.add('menu-closed');
+    calculatorContainer.classList.remove('hidden');
+    aboutSection.classList.add('hidden');
+    if (push) history.pushState({ view: 'calculator' }, '');
+  }
+
+  function showAbout(push = true) {
+    menuPanel.classList.add('menu-closed');
+    calculatorContainer.classList.add('hidden');
+    aboutSection.classList.remove('hidden');
+    if (push) history.pushState({ view: 'about' }, '');
+  }
+
+  /* ---------------- BUTTON ACTIONS ---------------- */
+
   menuToggleBtn.addEventListener('click', () => {
-    menuPanel.classList.toggle('menu-closed');
+    showMenu();
   });
 
-  /* ---------------- ABOUT PAGE ---------------- */
-
   aboutBtn.addEventListener('click', () => {
-    menuPanel.classList.add('menu-closed');        // close menu
-    calculatorContainer.classList.add('hidden');  // hide calculators
-    aboutSection.classList.remove('hidden');      // show about
+    showAbout();
   });
 
   backHomeBtn.addEventListener('click', () => {
-    aboutSection.classList.add('hidden');
-    calculatorContainer.classList.remove('hidden');
+    showCalculator();
   });
+
+  /* ---------------- ANDROID BACK BUTTON ---------------- */
+
+  window.addEventListener('popstate', (e) => {
+    if (!e.state) return;
+
+    if (e.state.view === 'menu') showMenu(false);
+    else if (e.state.view === 'about') showAbout(false);
+    else showCalculator(false);
+  });
+
+  // initial state
+  history.replaceState({ view: 'calculator' }, '');
 
   /* ---------------- PWA INSTALL ---------------- */
 
@@ -44,9 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.matchMedia('(display-mode: standalone)').matches ||
     window.navigator.standalone === true;
 
-  if (isAppInstalled()) {
-    installBtn.style.display = 'none';
-  }
+  if (isAppInstalled()) installBtn.style.display = 'none';
 
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
@@ -99,10 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      el.addEventListener('click', () => {
-        openCalculator(item.file);
-      });
-
+      el.addEventListener('click', () => openCalculator(item.file));
       menuItems.appendChild(el);
     });
   }
@@ -111,8 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function openCalculator(file) {
     try {
-      aboutSection.classList.add('hidden');
-      calculatorContainer.classList.remove('hidden');
+      showCalculator(); // closes menu + about
 
       calculatorContainer.innerHTML = `<div class="small">Loading…</div>`;
 
@@ -132,7 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
         s.remove();
       }
 
-      menuPanel.classList.add('menu-closed'); // close menu after selection
       calculatorContainer.scrollTop = 0;
 
     } catch (err) {
@@ -149,5 +172,43 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------------- START ---------------- */
 
   loadRegistry();
+/* ---------------- FEEDBACK ---------------- */
+
+const feedbackForm = document.getElementById('feedbackForm');
+const githubBtn = document.getElementById('githubFeedbackBtn');
+
+if (feedbackForm) {
+
+  feedbackForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('fbName').value.trim();
+    const msg = document.getElementById('fbMsg').value.trim();
+
+    if (!msg) return;
+
+    const subject = encodeURIComponent('Smart Calculators App Feedback');
+    const body = encodeURIComponent(
+      `Name: ${name || 'Anonymous'}\n\nFeedback:\n${msg}`
+    );
+
+    // opens email app
+    window.location.href =
+      `mailto:adnan.rafiq173@gmail.com?subject=${subject}&body=${body}`;
+  });
+
+  githubBtn.addEventListener('click', () => {
+    const name = document.getElementById('fbName').value.trim();
+    const msg = document.getElementById('fbMsg').value.trim();
+
+    const title = encodeURIComponent('App Feedback');
+    const body = encodeURIComponent(
+      `**Name:** ${name || 'Anonymous'}\n\n**Feedback:**\n${msg || 'Write your feedback here...'}`
+    );
+
+    githubBtn.href =
+      `https://github.com/adnanali9262/Smart-Calculators-by-AdnanRafiq/issues/new?title=${title}&body=${body}`;
+  });
+}
 
 });

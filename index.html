@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Smart Calculators by Adnan Rafiq</title>
 
-  <!-- Manifest -->
   <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="style.css" />
 
@@ -21,6 +20,8 @@
 </head>
 
 <body>
+
+  <!-- HEADER -->
   <header class="app-header">
     <div class="brand">
       <div class="logo">AR</div>
@@ -31,71 +32,73 @@
     </div>
 
     <div class="header-actions">
-      <button id="menuToggleBtn" class="btn ghost" aria-label="Toggle menu">☰ Menu</button>
-
-      <button id="aboutBtn" class="btn ghost" aria-label="About and Contact">
-        About<br>Contact<br>Feedback
-      </button>
+      <button id="menuToggleBtn" class="btn ghost">☰ Menu</button>
+      <button id="aboutBtn" class="btn ghost">About / Contact / Feedback</button>
     </div>
   </header>
 
-  <!-- INSTALL BAR (BELOW HEADER, ABOVE MENU) -->
+  <!-- INSTALL TILE -->
   <div id="installTile" class="install-bar hidden">
     <div class="install-text">
       <strong>Install Smart Calculators</strong>
       <span>Offline access & faster loading</span>
     </div>
-    <button id="installBtn" class="btn">
-      ⬇ Install
-    </button>
+    <button id="installBtn" class="btn primary">⬇ Install</button>
   </div>
 
+  <!-- MAIN LAYOUT -->
   <main id="main" class="layout">
-<nav id="calculatorList" class="nav" aria-label="Calculators menu">
 
-  <!-- MENU HEADER -->
-  <div class="menu-header">
-    <h3>Welcome</h3>
-    <p>Select a calculator</p>
-  </div>
+    <!-- MENU -->
+    <nav id="calculatorList" class="nav menu-closed" aria-label="Calculators menu">
 
-  <!-- CALCULATOR ITEMS (JS will insert here) -->
-  <div id="menuItems"></div>
+      <div class="menu-header">
+        <h3>Welcome</h3>
+        <p>Select a calculator</p>
+      </div>
 
-  <!-- MENU FOOTER -->
-  <div class="menu-footer">
-    Credits: Engr. Adnan Rafiq
-  </div>
+      <div id="menuItems"></div>
 
-</nav>
+      <div class="menu-footer">
+        Credits: Engr. Adnan Rafiq
+      </div>
 
+    </nav>
 
-    <!-- MAIN CALCULATOR AREA -->
-    <section id="calculatorContainer" class="content" aria-live="polite">
+    <!-- CALCULATOR CONTENT -->
+    <section id="calculatorContainer" class="content" aria-live="polite"></section>
 
-      
-
-
-    </section>
-
-    <!-- ABOUT & CONTACT SECTION -->
+    <!-- ABOUT / CONTACT / FEEDBACK -->
     <section id="aboutContactSection" class="content hidden" aria-live="polite">
-      <div class="welcome-card">
-        <h2>About Smart Calculators</h2>
 
+      <div class="page-section">
+
+        <!-- ABOUT -->
+        <h2>About Smart Calculators</h2>
         <p>
           Smart Calculators is a collection of practical electrical and engineering
-          calculators designed for telecomm workers, Solar technicians, and engineers.
+          calculators designed for technicians, students, and engineers working in
+          field and laboratory environments.
         </p>
-
         <p>
-          The application works offline for fast access during field and lab work.
+          The app works offline and is optimized for mobile devices to provide fast
+          and reliable access anytime.
         </p>
 
+        <hr>
+
+        <!-- CONTACT -->
         <h3>Contact</h3>
 
         <p><strong>Developer:</strong> Engr. Adnan Rafiq</p>
-        <p><strong>Email:</strong> adnan.rafiq173@gmail.com</p>
+
+        <p>
+          <strong>Email:</strong>
+          <a href="mailto:adnan.rafiq173@gmail.com">
+            adnan.rafiq173@gmail.com
+          </a>
+        </p>
+
         <p>
           <strong>GitHub:</strong>
           <a href="https://github.com/adnanali9262" target="_blank" rel="noopener">
@@ -103,10 +106,40 @@
           </a>
         </p>
 
-        <button id="backHomeBtn" class="btn">
-          ← Back to Calculators
-        </button>
+        <hr>
+
+        <!-- FEEDBACK -->
+        <h3>Send Feedback</h3>
+        <p>Your feedback helps improve this app.</p>
+
+        <form id="feedbackForm">
+
+          <label for="fbName">Your Name (optional)</label>
+          <input id="fbName" class="input" placeholder="Your name">
+
+          <label for="fbMsg">Message</label>
+          <textarea id="fbMsg" class="input" rows="4"
+            placeholder="Write your feedback here..." required></textarea>
+
+          <div class="controls">
+            <button type="submit" class="btn primary">Send via Email</button>
+
+            <a id="githubFeedbackBtn"
+               class="btn ghost"
+               target="_blank"
+               rel="noopener">
+              Send via GitHub
+            </a>
+          </div>
+
+        </form>
+
+        <div class="controls" style="margin-top:20px">
+          <button id="backHomeBtn" class="btn">← Back to Calculators</button>
+        </div>
+
       </div>
+
     </section>
 
   </main>
@@ -133,18 +166,13 @@
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredPrompt = e;
-
-      if (!isInstalled()) {
-        installTile.classList.remove("hidden");
-      }
+      if (!isInstalled()) installTile.classList.remove("hidden");
     });
 
     installBtn.addEventListener("click", async () => {
       if (!deferredPrompt) return;
-
       deferredPrompt.prompt();
       await deferredPrompt.userChoice;
-
       deferredPrompt = null;
       installTile.classList.add("hidden");
     });
