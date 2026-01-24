@@ -1,146 +1,137 @@
-/* Smart Calculators — App Style Navigation (NO browser history stacking) */
+/* ========= Smart Calculators App Navigation + Loader ========= */
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
 
-  const menu = document.getElementById('calculatorList');
-  const menuItems = document.getElementById('menuItems');
-  const menuToggleBtn = document.getElementById('menuToggleBtn');
+  const menu = document.getElementById("calculatorList");
+  const menuItemsBox = document.getElementById("menuItems");
+  const menuBtn = document.getElementById("menuToggleBtn");
 
   const aboutBtn = document.getElementById("aboutBtn");
+
+  const content = document.getElementById("calculatorContainer");
   const aboutSection = document.getElementById("aboutContactSection");
-  const backHomeBtn = document.getElementById("backHomeBtn");
 
-  const container = document.getElementById('calculatorContainer');
-
-  /* ---------------- APP SCREENS ---------------- */
-
-  let currentScreen = 'menu'; // menu | main | about
+  /* ---------------- Screen State Manager ---------------- */
 
   function showMenu() {
-    currentScreen = 'menu';
-
-    menu.classList.remove('menu-closed');
-    aboutSection.classList.add('hidden');
-    container.classList.remove('hidden');
+    menu.classList.remove("menu-closed");
+    content.classList.add("hidden");
+    aboutSection.classList.add("hidden");
   }
 
-  function showMain() {
-    currentScreen = 'main';
-
-    menu.classList.add('menu-closed');
-    aboutSection.classList.add('hidden');
-    container.classList.remove('hidden');
+  function showCalculator() {
+    menu.classList.add("menu-closed");
+    content.classList.remove("hidden");
+    aboutSection.classList.add("hidden");
   }
 
   function showAbout() {
-    currentScreen = 'about';
-
-    menu.classList.add('menu-closed');
-    container.classList.add('hidden');
-    aboutSection.classList.remove('hidden');
+    menu.classList.add("menu-closed");
+    content.classList.add("hidden");
+    aboutSection.classList.remove("hidden");
   }
 
-  /* ---------------- INITIAL SCREEN ---------------- */
+  /* ---------------- History Handling ---------------- */
 
-  showMenu(); // first time app opens → menu
+  function pushState(state) {
+    history.pushState({ screen: state }, "");
+  }
 
-  /* ---------------- BUTTON HANDLERS ---------------- */
+  window.addEventListener("popstate", (e) => {
+    const s = e.state?.screen || "menu";
 
-  menuToggleBtn.addEventListener('click', () => {
-    showMenu();
+    if (s === "menu") showMenu();
+    if (s === "about") showAbout();
   });
+
+  /* ---------------- Menu Button ---------------- */
+
+  menuBtn.addEventListener("click", () => {
+    showMenu();
+    pushState("menu");
+  });
+
+  /* ---------------- About Button ---------------- */
 
   aboutBtn.addEventListener("click", () => {
     showAbout();
+    pushState("about");
   });
 
-  backHomeBtn.addEventListener("click", () => {
-    showMenu();
-  });
-
-  /* ---------------- MOBILE BACK BUTTON ---------------- */
-
-  // Trap browser back and convert to app navigation
-  history.pushState(null, '', location.href);
-
-  window.addEventListener('popstate', () => {
-
-    if (currentScreen !== 'menu') {
-      showMenu();
-      history.pushState(null, '', location.href); // block exit
-    } else {
-      history.pushState(null, '', location.href); // stay on menu
-    }
-
-  });
-
-  /* ---------------- LOAD CALCULATORS ---------------- */
+  /* ---------------- Load Calculator Registry ---------------- */
 
   async function loadRegistry() {
     try {
-      const r = await fetch('calculators.json', { cache: 'no-store' });
-      if (!r.ok) throw new Error('no registry');
+      const r = await fetch("calculators.json", { cache: "no-store" });
+      if (!r.ok) throw new Error();
       const list = await r.json();
       renderMenu(list);
-    } catch (e) {
-      const fallback = [
+    } catch {
+      renderMenu([
         { title: "DC Cable Size Calculator", desc: "Voltage-drop based sizing", file: "dc-cable.html", icon: "⚡" },
         { title: "Energy Consumption Calculator", desc: "Daily/monthly/yearly energy", file: "energy-units.html", icon: "🔋" }
-      ];
-      renderMenu(fallback);
+      ]);
     }
   }
 
   function renderMenu(list) {
-    menuItems.innerHTML = '';
+    menuItemsBox.innerHTML = "";
+
     list.forEach(item => {
-      const el = document.createElement('div');
-      el.className = 'menu-item';
-      el.tabIndex = 0;
+      const el = document.createElement("div");
+      el.className = "menu-item";
       el.innerHTML = `
-        <div class="icon">${item.icon || ''}</div>
+        <div class="icon">${item.icon || ""}</div>
         <div class="meta">
           <div class="title">${item.title}</div>
           <div class="desc small">${item.desc}</div>
         </div>
       `;
-      el.onclick = () => loadCalculator(item.file);
-      menuItems.appendChild(el);
+
+      el.addEventListener("click", () => loadCalculator(item.file));
+      menuItemsBox.appendChild(el);
     });
   }
 
+  /* ---------------- Load Calculator (NO HISTORY) ---------------- */
+
   async function loadCalculator(file) {
     try {
-      container.innerHTML = `<div class="small">Loading…</div>`;
+      showCalculator();   // show content but do NOT push history
 
-      const r = await fetch('calculators/' + file, { cache: 'no-store' });
-      if (!r.ok) throw new Error('load failed');
+      content.innerHTML = `<div class="small">Loading…</div>`;
+
+      const r = await fetch("calculators/" + file, { cache: "no-store" });
+      if (!r.ok) throw new Error("Load failed");
 
       const html = await r.text();
-      container.innerHTML = html;
+      content.innerHTML = html;
 
-      // execute embedded scripts
-      const scripts = Array.from(container.querySelectorAll('script'));
-      for (const s of scripts) {
-        const ns = document.createElement('script');
+      // run embedded scripts
+      const scripts = content.querySelectorAll("script");
+      scripts.forEach(s => {
+        const ns = document.createElement("script");
         if (s.src) ns.src = s.src;
         else ns.textContent = s.textContent;
         document.body.appendChild(ns);
         s.remove();
-      }
+      });
 
-      showMain();
+      content.scrollTop = 0;
 
     } catch (err) {
-      container.innerHTML = `
+      content.innerHTML = `
         <div class="result">
-          <strong>Error loading calculator.</strong>
+          <strong>Error loading calculator</strong>
           <div class="small">${err.message}</div>
         </div>`;
-      console.error(err);
     }
   }
 
+  /* ---------------- Initial App State ---------------- */
+
+  history.replaceState({ screen: "menu" }, "");
+  showMenu();
   loadRegistry();
 
 });
