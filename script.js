@@ -33,8 +33,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* ---------------- History Handling ---------------- */
 
-  function pushState(state) {
-    history.pushState({ screen: state }, "");
+  function pushMenuState() {
+    history.pushState({ screen: "menu" }, "");
   }
 
   window.addEventListener("popstate", (e) => {
@@ -48,14 +48,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   menuBtn.addEventListener("click", () => {
     showMenu();
-    pushState("menu");
+    history.replaceState({ screen: "menu" }, "");
   });
 
   /* ---------------- About Button ---------------- */
 
   aboutBtn.addEventListener("click", () => {
     showAbout();
-    pushState("about");
+    history.pushState({ screen: "about" }, "");
   });
 
   /* ---------------- Load Calculator Registry ---------------- */
@@ -93,11 +93,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* ---------------- Load Calculator (NO HISTORY) ---------------- */
+  /* ---------------- Load Calculator ---------------- */
 
   async function loadCalculator(file) {
     try {
-      showCalculator();   // show content but do NOT push history
+      showCalculator();
+
+      // push ONE step so back returns to menu
+      pushMenuState();
 
       content.innerHTML = `<div class="small">Loading…</div>`;
 
