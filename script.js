@@ -1,4 +1,4 @@
-/* Core loader + UI control for PWA app */
+/* Smart Calculators — App Style Navigation (NO browser history stacking) */
 
 document.addEventListener('DOMContentLoaded', () => {
 
@@ -12,36 +12,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const container = document.getElementById('calculatorContainer');
 
-  /* ---------------- SCREEN CONTROL ---------------- */
+  /* ---------------- APP SCREENS ---------------- */
+
+  let currentScreen = 'menu'; // menu | main | about
+
+  function showMenu() {
+    currentScreen = 'menu';
+
+    menu.classList.remove('menu-closed');
+    aboutSection.classList.add('hidden');
+    container.classList.remove('hidden');
+  }
 
   function showMain() {
+    currentScreen = 'main';
+
     menu.classList.add('menu-closed');
     aboutSection.classList.add('hidden');
     container.classList.remove('hidden');
-
-    history.replaceState({ screen: 'main' }, '', '#main');
   }
 
-  function showMenu(push = true) {
-    aboutSection.classList.add('hidden');
-    container.classList.remove('hidden');
-    menu.classList.remove('menu-closed');
+  function showAbout() {
+    currentScreen = 'about';
 
-    if (push) history.pushState({ screen: 'menu' }, '', '#menu');
-  }
-
-  function showAbout(push = true) {
     menu.classList.add('menu-closed');
     container.classList.add('hidden');
     aboutSection.classList.remove('hidden');
-
-    if (push) history.pushState({ screen: 'about' }, '', '#about');
   }
 
-  /* ---------------- INITIAL STATE ---------------- */
+  /* ---------------- INITIAL SCREEN ---------------- */
 
-  // First load → show MENU
-  showMenu(false);
+  showMenu(); // first time app opens → menu
 
   /* ---------------- BUTTON HANDLERS ---------------- */
 
@@ -54,21 +55,24 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   backHomeBtn.addEventListener("click", () => {
-    showMain();
+    showMenu();
   });
 
-  /* ---------------- BACK BUTTON CONTROL ---------------- */
+  /* ---------------- MOBILE BACK BUTTON ---------------- */
 
-  window.addEventListener('popstate', (e) => {
-    const s = e.state?.screen || 'main';
+  // Trap browser back and convert to app navigation
+  history.pushState(null, '', location.href);
 
-    if (s === 'menu') showMenu(false);
-    else if (s === 'about') showAbout(false);
-    else showMain();
+  window.addEventListener('popstate', () => {
+
+    if (currentScreen !== 'menu') {
+      showMenu();
+      history.pushState(null, '', location.href); // block exit
+    } else {
+      history.pushState(null, '', location.href); // stay on menu
+    }
+
   });
-
-  // Force base state so app does not close on back
-  history.replaceState({ screen: 'main' }, '', '#main');
 
   /* ---------------- LOAD CALCULATORS ---------------- */
 
