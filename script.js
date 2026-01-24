@@ -1,100 +1,76 @@
-/* Core loader + UI control for PWA app with proper navigation */
+/* Core loader + UI control for PWA app */
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  /* ---------------- DOM REFERENCES ---------------- */
-
-  const menuPanel = document.getElementById('calculatorList'); // nav
+  const menu = document.getElementById('calculatorList');
   const menuItems = document.getElementById('menuItems');
-
   const menuToggleBtn = document.getElementById('menuToggleBtn');
-  const aboutBtn = document.getElementById('aboutBtn');
-  const backHomeBtn = document.getElementById('backHomeBtn');
 
-  const calculatorContainer = document.getElementById('calculatorContainer');
-  const aboutSection = document.getElementById('aboutContactSection');
+  const aboutBtn = document.getElementById("aboutBtn");
+  const aboutSection = document.getElementById("aboutContactSection");
+  const backHomeBtn = document.getElementById("backHomeBtn");
 
-  const installBtn = document.getElementById('installBtn');
+  const container = document.getElementById('calculatorContainer');
 
-  /* ---------------- VIEW CONTROL ---------------- */
+  /* ---------------- SCREEN CONTROL ---------------- */
 
-  function showMenu(push = true) {
-    menuPanel.classList.remove('menu-closed');
-    calculatorContainer.classList.add('hidden');
+  function showMain() {
+    menu.classList.add('menu-closed');
     aboutSection.classList.add('hidden');
-    if (push) history.pushState({ view: 'menu' }, '');
+    container.classList.remove('hidden');
+
+    history.replaceState({ screen: 'main' }, '', '#main');
   }
 
-  function showCalculator(push = true) {
-    menuPanel.classList.add('menu-closed');
-    calculatorContainer.classList.remove('hidden');
+  function showMenu(push = true) {
     aboutSection.classList.add('hidden');
-    if (push) history.pushState({ view: 'calculator' }, '');
+    container.classList.remove('hidden');
+    menu.classList.remove('menu-closed');
+
+    if (push) history.pushState({ screen: 'menu' }, '', '#menu');
   }
 
   function showAbout(push = true) {
-    menuPanel.classList.add('menu-closed');
-    calculatorContainer.classList.add('hidden');
+    menu.classList.add('menu-closed');
+    container.classList.add('hidden');
     aboutSection.classList.remove('hidden');
-    if (push) history.pushState({ view: 'about' }, '');
+
+    if (push) history.pushState({ screen: 'about' }, '', '#about');
   }
 
-  /* ---------------- BUTTON ACTIONS ---------------- */
+  /* ---------------- INITIAL STATE ---------------- */
+
+  // First load → show MENU
+  showMenu(false);
+
+  /* ---------------- BUTTON HANDLERS ---------------- */
 
   menuToggleBtn.addEventListener('click', () => {
     showMenu();
   });
 
-  aboutBtn.addEventListener('click', () => {
+  aboutBtn.addEventListener("click", () => {
     showAbout();
   });
 
-  backHomeBtn.addEventListener('click', () => {
-    showCalculator();
+  backHomeBtn.addEventListener("click", () => {
+    showMain();
   });
 
-  /* ---------------- ANDROID BACK BUTTON ---------------- */
+  /* ---------------- BACK BUTTON CONTROL ---------------- */
 
   window.addEventListener('popstate', (e) => {
-    if (!e.state) return;
+    const s = e.state?.screen || 'main';
 
-    if (e.state.view === 'menu') showMenu(false);
-    else if (e.state.view === 'about') showAbout(false);
-    else showCalculator(false);
+    if (s === 'menu') showMenu(false);
+    else if (s === 'about') showAbout(false);
+    else showMain();
   });
 
-  // initial state
-  history.replaceState({ view: 'calculator' }, '');
+  // Force base state so app does not close on back
+  history.replaceState({ screen: 'main' }, '', '#main');
 
-  /* ---------------- PWA INSTALL ---------------- */
-
-  let deferredPrompt = null;
-
-  const isAppInstalled = () =>
-    window.matchMedia('(display-mode: standalone)').matches ||
-    window.navigator.standalone === true;
-
-  if (isAppInstalled()) installBtn.style.display = 'none';
-
-  window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    if (!isAppInstalled()) installBtn.style.display = 'inline-flex';
-  });
-
-  installBtn.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-    installBtn.style.display = 'none';
-  });
-
-  window.addEventListener('appinstalled', () => {
-    installBtn.style.display = 'none';
-  });
-
-  /* ---------------- LOAD REGISTRY ---------------- */
+  /* ---------------- LOAD CALCULATORS ---------------- */
 
   async function loadRegistry() {
     try {
@@ -113,12 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderMenu(list) {
     menuItems.innerHTML = '';
-
     list.forEach(item => {
       const el = document.createElement('div');
       el.className = 'menu-item';
       el.tabIndex = 0;
-
       el.innerHTML = `
         <div class="icon">${item.icon || ''}</div>
         <div class="meta">
@@ -126,28 +100,23 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="desc small">${item.desc}</div>
         </div>
       `;
-
-      el.addEventListener('click', () => openCalculator(item.file));
+      el.onclick = () => loadCalculator(item.file);
       menuItems.appendChild(el);
     });
   }
 
-  /* ---------------- LOAD CALCULATOR ---------------- */
-
-  async function openCalculator(file) {
+  async function loadCalculator(file) {
     try {
-      showCalculator(); // closes menu + about
-
-      calculatorContainer.innerHTML = `<div class="small">Loading…</div>`;
+      container.innerHTML = `<div class="small">Loading…</div>`;
 
       const r = await fetch('calculators/' + file, { cache: 'no-store' });
       if (!r.ok) throw new Error('load failed');
 
       const html = await r.text();
-      calculatorContainer.innerHTML = html;
+      container.innerHTML = html;
 
       // execute embedded scripts
-      const scripts = Array.from(calculatorContainer.querySelectorAll('script'));
+      const scripts = Array.from(container.querySelectorAll('script'));
       for (const s of scripts) {
         const ns = document.createElement('script');
         if (s.src) ns.src = s.src;
@@ -156,59 +125,18 @@ document.addEventListener('DOMContentLoaded', () => {
         s.remove();
       }
 
-      calculatorContainer.scrollTop = 0;
+      showMain();
 
     } catch (err) {
-      calculatorContainer.innerHTML = `
+      container.innerHTML = `
         <div class="result">
           <strong>Error loading calculator.</strong>
           <div class="small">${err.message}</div>
-        </div>
-      `;
+        </div>`;
       console.error(err);
     }
   }
 
-  /* ---------------- START ---------------- */
-
   loadRegistry();
-/* ---------------- FEEDBACK ---------------- */
-
-const feedbackForm = document.getElementById('feedbackForm');
-const githubBtn = document.getElementById('githubFeedbackBtn');
-
-if (feedbackForm) {
-
-  feedbackForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-
-    const name = document.getElementById('fbName').value.trim();
-    const msg = document.getElementById('fbMsg').value.trim();
-
-    if (!msg) return;
-
-    const subject = encodeURIComponent('Smart Calculators App Feedback');
-    const body = encodeURIComponent(
-      `Name: ${name || 'Anonymous'}\n\nFeedback:\n${msg}`
-    );
-
-    // opens email app
-    window.location.href =
-      `mailto:adnan.rafiq173@gmail.com?subject=${subject}&body=${body}`;
-  });
-
-  githubBtn.addEventListener('click', () => {
-    const name = document.getElementById('fbName').value.trim();
-    const msg = document.getElementById('fbMsg').value.trim();
-
-    const title = encodeURIComponent('App Feedback');
-    const body = encodeURIComponent(
-      `**Name:** ${name || 'Anonymous'}\n\n**Feedback:**\n${msg || 'Write your feedback here...'}`
-    );
-
-    githubBtn.href =
-      `https://github.com/adnanali9262/Smart-Calculators-by-AdnanRafiq/issues/new?title=${title}&body=${body}`;
-  });
-}
 
 });
