@@ -1,181 +1,219 @@
-<div class="calculator" style="display:flex; flex-direction:column; gap:12px;">
+<div class="calculator">
   <h2>🔌 Telecom Rectifier Calculator</h2>
 
-  <!-- Phase selection -->
-  <div style="margin-bottom:10px;">
-    <label for="phaseType"><strong>Select Phase:</strong></label>
-    <select id="phaseType" class="input">
-      <option value="single">Single Phase</option>
-      <option value="three">Three Phase</option>
-    </select>
+  <!-- Phase Selection -->
+  <div class="form-grid" style="margin-top:8px">
+    <div>
+      <label for="phaseType"><b>Phase Type</b></label>
+      <select id="phaseType" class="input">
+        <option value="single">Single Phase</option>
+        <option value="three">Three Phase</option>
+      </select>
+    </div>
+
+    <div id="threeMode" style="display:none">
+      <label for="threeType"><b>Three Phase Mode</b></label>
+      <select id="threeType" class="input">
+        <option value="balanced">Balanced Rectifier</option>
+        <option value="unbalanced">Unbalanced Rectifier</option>
+      </select>
+    </div>
   </div>
 
-  <div style="display:flex; justify-content:center; align-items:flex-start; gap:20px; flex-wrap:wrap;">
-    
-    <!-- Left Panel: AC Inputs -->
-    <div style="flex:1; min-width:250px;" id="inputPanel">
-      <h3>AC Input</h3>
-      <div id="singlePhaseInputs" class="form-grid" style="gap:10px;">
-        <div>
-          <label for="acV">AC Voltage (V)</label>
-          <input id="acV" class="input" type="number" placeholder="230">
-        </div>
-        <div>
-          <label for="acI">AC Current (A)</label>
-          <input id="acI" class="input" type="number" placeholder="Leave blank if unknown">
-        </div>
-        <div>
-          <label for="pf">Power Factor</label>
-          <input id="pf" class="input" type="number" step="0.01" placeholder="0–1">
-        </div>
-      </div>
+  <!-- AC Inputs -->
+  <div id="acInputs" class="form-grid" style="margin-top:8px">
 
-      <div id="threePhaseInputs" class="form-grid" style="gap:10px; display:none;">
-        <!-- Phase 1 -->
-        <h4>Phase 1</h4>
-        <div><label for="v1">Voltage (V)</label><input id="v1" class="input" type="number"></div>
-        <div><label for="i1">Current (A)</label><input id="i1" class="input" type="number"></div>
-        <div><label for="pf1">Power Factor</label><input id="pf1" class="input" type="number" step="0.01"></div>
-        <!-- Phase 2 -->
-        <h4>Phase 2</h4>
-        <div><label for="v2">Voltage (V)</label><input id="v2" class="input" type="number"></div>
-        <div><label for="i2">Current (A)</label><input id="i2" class="input" type="number"></div>
-        <div><label for="pf2">Power Factor</label><input id="pf2" class="input" type="number" step="0.01"></div>
-        <!-- Phase 3 -->
-        <h4>Phase 3</h4>
-        <div><label for="v3">Voltage (V)</label><input id="v3" class="input" type="number"></div>
-        <div><label for="i3">Current (A)</label><input id="i3" class="input" type="number"></div>
-        <div><label for="pf3">Power Factor</label><input id="pf3" class="input" type="number" step="0.01"></div>
+    <!-- Single Phase -->
+    <div id="singleInputs" style="display:block">
+      <label>AC Input (Single Phase)</label>
+      <input id="acV" class="input" type="number" placeholder="AC Voltage (V)">
+      <input id="acI" class="input" type="number" placeholder="AC Current (A)">
+      <input id="pf" class="input" type="number" step="0.01" placeholder="Power Factor">
+    </div>
+
+    <!-- Balanced Three Phase -->
+    <div id="balancedInputs" style="display:none">
+      <label>AC Input (Three Phase – Balanced)</label>
+      <input id="bV" class="input" type="number" placeholder="Line Voltage (V)">
+      <input id="bI" class="input" type="number" placeholder="Line Current (A)">
+      <input id="bPF" class="input" type="number" step="0.01" placeholder="Power Factor">
+    </div>
+
+    <!-- Unbalanced Three Phase -->
+    <div id="unbalancedInputs" style="display:none">
+      <label>AC Input (Three Phase – Unbalanced)</label>
+      <div><b>Phase 1:</b>
+        <input id="v1" class="input" type="number" placeholder="Phase 1 Voltage (V)">
+        <input id="i1" class="input" type="number" placeholder="Phase 1 Current (A)">
+        <input id="pf1" class="input" type="number" step="0.01" placeholder="Phase 1 PF">
+      </div>
+      <div><b>Phase 2:</b>
+        <input id="v2" class="input" type="number" placeholder="Phase 2 Voltage (V)">
+        <input id="i2" class="input" type="number" placeholder="Phase 2 Current (A)">
+        <input id="pf2" class="input" type="number" step="0.01" placeholder="Phase 2 PF">
+      </div>
+      <div><b>Phase 3:</b>
+        <input id="v3" class="input" type="number" placeholder="Phase 3 Voltage (V)">
+        <input id="i3" class="input" type="number" placeholder="Phase 3 Current (A)">
+        <input id="pf3" class="input" type="number" step="0.01" placeholder="Phase 3 PF">
       </div>
     </div>
 
-    <!-- Rectifier Box -->
-    <div style="flex:0.5; min-width:150px; text-align:center; position:relative;">
-      <div style="width:150px; height:100px; border:2px solid #333; border-radius:8px; line-height:100px; font-weight:bold; background:#f0f0f0; margin:auto;">
-        Rectifier
-      </div>
-      <div id="efficiencyDisplay" style="margin-top:12px; font-weight:bold;"></div>
-    </div>
+  </div>
 
-    <!-- Outputs Panel: DC Output -->
-    <div style="flex:1; min-width:250px;">
-      <h3>DC Output</h3>
-      <div class="form-grid" style="gap:10px;">
-        <div>
-          <label for="dcV">DC Voltage (VDC)</label>
-          <input id="dcV" class="input" type="number" placeholder="48">
-        </div>
-        <div>
-          <label for="dcI">DC Current (A)</label>
-          <input id="dcI" class="input" type="number" placeholder="Leave blank if unknown">
-        </div>
-      </div>
-    </div>
+  <!-- DC Output & Efficiency -->
+  <div class="form-grid" style="margin-top:8px">
+    <label>DC Output & Efficiency</label>
+    <input id="dcV" class="input" type="number" placeholder="DC Output Voltage (V)">
+    <input id="dcI" class="input" type="number" placeholder="DC Output Current (A)">
+    <input id="eff" class="input" type="number" step="0.01" placeholder="Rectifier Efficiency (%)">
   </div>
 
   <!-- Controls -->
-  <div class="controls" style="margin-top:12px; display:flex; gap:10px;">
+  <div class="controls" style="margin-top:12px">
     <button class="btn primary" id="calcBtn">Calculate</button>
     <button class="btn ghost" id="resetBtn">Reset</button>
   </div>
 
   <!-- Results -->
-  <div id="result" class="result" style="display:none;"></div>
+  <div id="result" class="result" style="display:none"></div>
 </div>
 
 <script>
 (function(){
-  const $ = id => document.getElementById(id);
-  const result = $('result');
-  const effDisp = $('efficiencyDisplay');
-  const phaseType = $('phaseType');
-  const singleDiv = $('singlePhaseInputs');
-  const threeDiv = $('threePhaseInputs');
+  const $ = id=>document.getElementById(id);
+  const result = $("result");
+  const allInputs = Array.from(document.querySelectorAll('input'));
 
-  phaseType.addEventListener('change', ()=>{
-    if(phaseType.value==='single'){
-      singleDiv.style.display='grid';
-      threeDiv.style.display='none';
+  $("phaseType").onchange = updateUI;
+  $("threeType").onchange = updateUI;
+  $("calcBtn").onclick = calculate;
+  $("resetBtn").onclick = resetAll;
+
+  const paramNames = {
+    acV: "AC Voltage (V)",
+    acI: "AC Current (A)",
+    pf: "Power Factor",
+    bV: "Line Voltage (V)",
+    bI: "Line Current (A)",
+    bPF: "Power Factor",
+    v1: "Phase 1 Voltage (V)",
+    i1: "Phase 1 Current (A)",
+    pf1: "Phase 1 PF",
+    v2: "Phase 2 Voltage (V)",
+    i2: "Phase 2 Current (A)",
+    pf2: "Phase 2 PF",
+    v3: "Phase 3 Voltage (V)",
+    i3: "Phase 3 Current (A)",
+    pf3: "Phase 3 PF",
+    dcV: "DC Output Voltage (V)",
+    dcI: "DC Output Current (A)",
+    eff: "Rectifier Efficiency (%)"
+  };
+
+  function updateUI(){
+    const phase = $("phaseType").value;
+    $("threeMode").style.display = phase==="three"?"block":"none";
+    $("singleInputs").style.display = phase==="single"?"block":"none";
+    if(phase==="three"){
+      const mode = $("threeType").value;
+      $("balancedInputs").style.display = mode==="balanced"?"block":"none";
+      $("unbalancedInputs").style.display = mode==="unbalanced"?"block":"none";
     }else{
-      singleDiv.style.display='none';
-      threeDiv.style.display='grid';
+      $("balancedInputs").style.display = "none";
+      $("unbalancedInputs").style.display = "none";
     }
-    reset();
-  });
+    clearHighlights();
+  }
 
-  function calc(){
-    let dcV=parseFloat($('dcV').value);
-    let dcI=parseFloat($('dcI').value);
-    let eff=null;
+  function val(id){ return parseFloat($(id)?.value) || null; }
+  function clearHighlights(){ allInputs.forEach(i=>i.style.border='1px solid #ccc'); }
 
-    let acValues=[];
-    if(phaseType.value==='single'){
-      acValues=[parseFloat($('acV').value),parseFloat($('acI').value),parseFloat($('pf').value)];
+  function detectMissing(){
+    const phase = $("phaseType").value;
+    const unbalanced = phase==="three" && $("threeType").value==="unbalanced";
+    clearHighlights();
+
+    let missing = null;
+    if(unbalanced){
+      missing = ["dcV","dcI","eff"].find(k=>val(k)===null);
+      if(!missing){ error("Leave one DC output or efficiency empty"); return null; }
     } else {
-      acValues=[
-        parseFloat($('v1').value),parseFloat($('i1').value),parseFloat($('pf1').value),
-        parseFloat($('v2').value),parseFloat($('i2').value),parseFloat($('pf2').value),
-        parseFloat($('v3').value),parseFloat($('i3').value),parseFloat($('pf3').value)
-      ];
+      const mainKeys = phase==="single"?["acV","acI","pf","dcV","dcI","eff"]:["bV","bI","bPF","dcV","dcI","eff"];
+      const missingList = mainKeys.filter(k=>val(k)===null);
+      if(missingList.length!==1){ error("Fill exactly 5 parameters and leave one empty"); return null; }
+      missing = missingList[0];
     }
 
-    let emptyCount = 0;
-    acValues.forEach(v=>{if(isNaN(v)) emptyCount++;});
-    if(isNaN(dcV)) emptyCount++;
-    if(isNaN(dcI)) emptyCount++;
+    if(missing) $(missing).style.border = '2px solid orange';
+    return missing;
+  }
 
-    if(emptyCount===0){
-      showErr('All fields are filled. Leave one field empty to calculate.');
-      return;
-    }
-    if(emptyCount>1){
-      showErr('Please fill all fields except one (the missing parameter to calculate).');
-      return;
+  function calculate(){
+    const phase = $("phaseType").value;
+    const missing = detectMissing();
+    if(!missing) return;
+
+    let PAC = null, PDC = null;
+
+    const acV = val("acV"), acI=val("acI"), pf=val("pf");
+    const bV = val("bV"), bI=val("bI"), bPF=val("bPF");
+    const v1=val("v1"),i1=val("i1"),pf1=val("pf1"),
+          v2=val("v2"),i2=val("i2"),pf2=val("pf2"),
+          v3=val("v3"),i3=val("i3"),pf3=val("pf3");
+
+    const dcV = val("dcV"), dcI = val("dcI"), eff = val("eff");
+
+    // --- Compute AC Power ---
+    if(phase==="single"){
+      if(acV!==null && acI!==null && pf!==null) PAC = acV*acI*pf;
+      else if(dcV!==null && dcI!==null && eff!==null) PAC = (dcV*dcI)/(eff/100);
+    } else if(phase==="three"){
+      const mode = $("threeType").value;
+      if(mode==="balanced"){
+        if(bV!==null && bI!==null && bPF!==null) PAC = Math.sqrt(3)*bV*bI*bPF;
+        else if(dcV!==null && dcI!==null && eff!==null) PAC = (dcV*dcI)/(eff/100);
+      } else PAC = v1*i1*pf1 + v2*i2*pf2 + v3*i3*pf3;
     }
 
-    // Calculate AC power
-    let PAC=0;
-    if(phaseType.value==='single'){
-      let [V,I,PF]=acValues;
-      PAC=V*I*PF;
-    }else{
-      for(let i=0;i<acValues.length;i+=3){
-        let [V,I,PF]=acValues.slice(i,i+3);
-        PAC+=V*I*PF;
+    // --- Compute DC Power ---
+    if(dcV!==null && dcI!==null) PDC = dcV*dcI;
+    else if(dcV!==null && eff!==null && PAC!==null) PDC = PAC*eff/100;
+    else if(dcI!==null && eff!==null && PAC!==null) PDC = PAC*eff/100;
+
+    // --- Solve missing ---
+    let resultValue = null;
+    try{
+      switch(missing){
+        case "acV": resultValue = PAC/(acI*pf); break;
+        case "acI": resultValue = PAC/(acV*pf); break;
+        case "pf":  resultValue = PAC/(acV*acI); break;
+        case "bV":  resultValue = PAC/(Math.sqrt(3)*bI*bPF); break;
+        case "bI":  resultValue = PAC/(Math.sqrt(3)*bV*bPF); break;
+        case "bPF": resultValue = PAC/(Math.sqrt(3)*bV*bI); break;
+        case "dcV": resultValue = dcI!==null? PDC/dcI : null; break;
+        case "dcI": resultValue = dcV!==null? PDC/dcV : null; break;
+        case "eff": resultValue = PAC!==0? (PDC/PAC)*100 : null; break;
       }
-    }
+    }catch(e){return error("Not enough input to calculate missing parameter");}
 
-    // Calculate missing DC parameter
-    if(isNaN(dcV)) dcV = dcI? PAC/dcI : 0;
-    if(isNaN(dcI)) dcI = dcV? PAC/dcV : 0;
-
-    let PDC = dcV*dcI;
-    eff = (PDC/PAC)*100;
-
-    // Display results
+    // --- Display Result with Table ---
     result.style.display='block';
-    result.innerHTML=`
-      <h4>Results</h4>
-      <div class="small">DC Voltage: <span class="code">${dcV.toFixed(2)} V</span></div>
-      <div class="small">DC Current: <span class="code">${dcI.toFixed(2)} A</span></div>
+    result.innerHTML = `
+      <div style="margin-bottom:8px;font-size:16px;color:orange;"><b>Missing Parameter:</b> ${paramNames[missing]} = <span style="color:#007bff">${resultValue!==null?resultValue.toFixed(3):'N/A'}</span></div>
+      <table style="width:100%;border-collapse:collapse;font-size:14px">
+        <tr style="background:#eee"><th style="border:1px solid #ccc;padding:4px">Parameter</th><th style="border:1px solid #ccc;padding:4px">Value</th></tr>
+        <tr><td>AC Power (W)</td><td>${PAC!==null?PAC.toFixed(3):'N/A'}</td></tr>
+        <tr><td>DC Power (W)</td><td>${PDC!==null?PDC.toFixed(3):'N/A'}</td></tr>
+        <tr><td>Input Power (W)</td><td>${PAC!==null?PAC.toFixed(3):'N/A'}</td></tr>
+        <tr><td>Output Power (W)</td><td>${PDC!==null?PDC.toFixed(3):'N/A'}</td></tr>
+      </table>
     `;
-    effDisp.textContent = `Efficiency: ${eff.toFixed(2)}%`;
   }
 
-  function reset(){
-    document.querySelectorAll('input').forEach(i=>i.value='');
-    result.style.display='none';
-    result.innerHTML='';
-    effDisp.textContent='';
-  }
+  function error(msg){ result.style.display='block'; result.innerHTML = `<span style="color:red">${msg}</span>`; }
+  function resetAll(){ allInputs.forEach(i=>i.value=''); clearHighlights(); result.style.display='none'; result.innerHTML=''; }
 
-  function showErr(msg){
-    result.style.display='block';
-    result.innerHTML=`<div class="small" style="color:#c00"><strong>${msg}</strong></div>`;
-    effDisp.textContent='';
-  }
-
-  $('calcBtn').addEventListener('click',calc);
-  $('resetBtn').addEventListener('click',reset);
+  updateUI();
 })();
 </script>
